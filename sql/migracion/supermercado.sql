@@ -4,6 +4,9 @@ GO
 CREATE PROCEDURE EL_DROPEO.MIGRAR_SUPERMERCADOS AS
 BEGIN
 
+/*
+ Migración de provincias
+ */
 INSERT INTO EL_DROPEO.Provincia (nombre)
 SELECT nombre
 FROM (
@@ -15,6 +18,9 @@ FROM (
 ) provincias
 WHERE nombre IS NOT NULL
 
+/*
+ Migración de localidades
+ */
 INSERT INTO EL_DROPEO.Localidad (nombre, provincia_id)
 SELECT localidades.nombre, p.id
 FROM (
@@ -26,6 +32,9 @@ FROM (
 ) localidades
 INNER JOIN EL_DROPEO.Provincia p ON localidades.provincia = p.nombre;
 
+/*
+ Migración de ubicaciones
+ */
 INSERT INTO EL_DROPEO.Ubicacion (calle, altura, localidad_id)
 SELECT 
     LEFT(direccion, LEN(direccion) - CHARINDEX(' ', REVERSE(direccion))) AS calle,
@@ -40,6 +49,9 @@ FROM (
 ) direcciones
 INNER JOIN EL_DROPEO.Localidad l ON direcciones.localidad = l.nombre;
 
+/*
+ Migración de condiciones fiscales
+ */
 INSERT INTO EL_DROPEO.Condicion_Fiscal (descripcion)
 SELECT DISTINCT SUPER_CONDICION_FISCAL FROM gd_esquema.Maestra
 WHERE SUPER_CONDICION_FISCAL IS NOT NULL
@@ -74,3 +86,7 @@ FROM CTE
 WHERE rn = 1;
 
 END
+GO
+
+EXEC EL_DROPEO.MIGRAR_SUPERMERCADOS
+GO
