@@ -1,0 +1,29 @@
+USE GD1C2024
+GO
+
+CREATE PROCEDURE EL_DROPEO.MIGRAR_SUPERMERCADOS AS
+BEGIN
+
+INSERT INTO EL_DROPEO.Provincia (nombre)
+SELECT nombre
+FROM (
+    SELECT CLIENTE_PROVINCIA AS nombre FROM gd_esquema.Maestra
+    UNION
+    SELECT SUCURSAL_PROVINCIA AS nombre FROM gd_esquema.Maestra
+    UNION
+    SELECT SUPER_PROVINCIA AS nombre FROM gd_esquema.Maestra
+) provincias
+WHERE nombre IS NOT NULL
+
+INSERT INTO EL_DROPEO.Localidad (nombre, provincia_id)
+SELECT localidades.nombre, p.id
+FROM (
+    SELECT CLIENTE_LOCALIDAD AS nombre, CLIENTE_PROVINCIA AS provincia FROM gd_esquema.Maestra WHERE CLIENTE_LOCALIDAD IS NOT NULL
+    UNION
+    SELECT SUCURSAL_LOCALIDAD AS nombre, SUCURSAL_PROVINCIA AS provincia FROM gd_esquema.Maestra WHERE SUCURSAL_LOCALIDAD IS NOT NULL
+    UNION
+    SELECT SUPER_LOCALIDAD AS nombre, SUPER_PROVINCIA AS provincia FROM gd_esquema.Maestra WHERE SUPER_LOCALIDAD IS NOT NULL
+) localidades
+INNER JOIN EL_DROPEO.Provincia p ON localidades.provincia = p.nombre;
+
+END
