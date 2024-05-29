@@ -85,6 +85,28 @@ SELECT
 FROM CTE
 WHERE rn = 1;
 
+/*
+ Migración de sucursales
+ */
+INSERT INTO EL_DROPEO.Sucursal (nombre, ubicacion_id, supermercado_id)
+SELECT 
+    sucursales.SUCURSAL_NOMBRE AS nombre,
+    u.id AS ubicacion_id,
+    s.id AS supermercado_id
+FROM (
+    SELECT DISTINCT
+        SUCURSAL_NOMBRE,
+        SUCURSAL_DIRECCION AS direccion,
+        SUCURSAL_LOCALIDAD AS localidad,
+        SUCURSAL_PROVINCIA AS provincia,
+        SUPER_CUIT
+    FROM gd_esquema.Maestra
+    WHERE SUCURSAL_DIRECCION IS NOT NULL
+) sucursales
+INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura)
+INNER JOIN EL_DROPEO.Localidad l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincia WHERE id = l.provincia_id)
+INNER JOIN EL_DROPEO.Supermercado s ON sucursales.SUPER_CUIT = s.cuit;
+
 END
 GO
 
