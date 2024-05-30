@@ -17,22 +17,32 @@ FROM gd_esquema.Maestra
 LEFT JOIN EL_DROPEO.Categoria C ON C.nombre = PRODUCTO_CATEGORIA
 WHERE PRODUCTO_CATEGORIA IS NOT NULL AND PRODUCTO_SUB_CATEGORIA IS NOT NULL
 
-INSERT INTO EL_DROPEO.Producto(nombre, descricion, precio, marca_id, sub_categoria_id) --Typo
-SELECT DISTINCT PRODUCTO_NOMBRE, PRODUCTO_DESCRIPCION, PRODUCTO_PRECIO, M.id, S.id
-FROM gd_esquema.Maestra 
+INSERT INTO EL_DROPEO.Producto(nombre, descripcion, precio, marca_id, sub_categoria_id) --Typo
+SELECT DISTINCT PRODUCTO_NOMBRE, PRODUCTO_DESCRIPCION, PRODUCTO_PRECIO, M.id, cs.id
+FROM (
+	SELECT DISTINCT PRODUCTO_NOMBRE, PRODUCTO_DESCRIPCION, PRODUCTO_PRECIO, PRODUCTO_MARCA, PRODUCTO_SUB_CATEGORIA, PRODUCTO_CATEGORIA
+	FROM gd_esquema.Maestra) as productos
 LEFT JOIN EL_DROPEO.Marca M ON M.nombre = PRODUCTO_MARCA
-LEFT JOIN EL_DROPEO.Sub_Categoria S on S.nombre = PRODUCTO_SUB_CATEGORIA
+LEFT JOIN (
+	SELECT S.nombre as nombre_subcategoria, categoria_id, C.nombre as nombre_categoria, s.id 
+	FROM EL_DROPEO.Sub_Categoria S
+	LEFT JOIN EL_DROPEO.Categoria C ON categoria_id = C.id
+) cs ON PRODUCTO_CATEGORIA = cs.nombre_categoria AND PRODUCTO_SUB_CATEGORIA = cs.nombre_subcategoria
 WHERE PRODUCTO_NOMBRE IS NOT NULL AND PRODUCTO_DESCRIPCION IS NOT NULL AND PRODUCTO_PRECIO IS NOT NULL
 
-INSERT INTO EL_DROPEO.Promocion(codigo, descripcion, fecha_inicio, fecha_fin) -- Usar codigo como id
+SET IDENTITY_INSERT EL_DROPEO.Promocion ON
+INSERT INTO EL_DROPEO.Promocion(id, descripcion, fecha_inicio, fecha_fin) -- Usar codigo como id
 SELECT DISTINCT PROMO_CODIGO, PROMOCION_DESCRIPCION, PROMOCION_FECHA_INICIO, PROMOCION_FECHA_FIN
 FROM gd_esquema.Maestra
 WHERE PROMO_CODIGO IS NOT NULL
+-- todo: usar count
+DBCC checkident ('EL_DROPEO.Promocion', reseed, 131)
+SET IDENTITY_INSERT EL_DROPEO.Promocion OFF
 
 INSERT INTO EL_DROPEO.Regla(descripcion, cantidad_aplicable_descuento, cantidad_aplicable_regla, cantidad_maxima, misma_marca, mismo_producto, promocion_id)
 SELECT DISTINCT REGLA_DESCRIPCION, REGLA_CANT_APLICA_DESCUENTO, REGLA_CANT_APLICABLE_REGLA, REGLA_CANT_MAX_PROD, REGLA_APLICA_MISMA_MARCA, REGLA_APLICA_MISMO_PROD, P.id
 FROM gd_esquema.Maestra
-LEFT JOIN EL_DROPEO.Promocion P on P.codigo = PROMO_CODIGO
+LEFT JOIN EL_DROPEO.Promocion P on P.id = PROMO_CODIGO
 WHERE REGLA_DESCRIPCION IS NOT NULL
 
 INSERT INTO EL_DROPEO.Promocion_Producto(producto_id, promocion_id)
@@ -40,7 +50,8 @@ SELECT DISTINCT P.id, Promo.id
 FROM EL_DROPEO.Producto P
 LEFT JOIN EL_DROPEO.Marca M ON M.id = P.marca_id
 LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = P.sub_categoria_id
-LEFT JOIN gd_esquema.Maestra Maestra ON Maestra.PRODUCTO_NOMBRE = P.nombre AND Maestra.PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
+LEFT JOIN EL_DROPEO.Categoria C ON C.id = S.categoria_id
+LEFT JOIN gd_esquema.Maestra Maestra ON Maestra.PRODUCTO_NOMBRE = P.nombre AND Maestra.PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = s.nombre AND PRODUCTO_CATEGORIA = c.nombre
 INNER JOIN EL_DROPEO.Promocion Promo ON Maestra.PROMO_CODIGO = Promo.id
 WHERE Maestra.PROMO_CODIGO IS NOT NULL AND Maestra.PRODUCTO_NOMBRE IS NOT NULL
 
