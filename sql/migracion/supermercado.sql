@@ -112,6 +112,48 @@ INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', 
 INNER JOIN EL_DROPEO.Localidad l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincia WHERE id = l.provincia_id)
 INNER JOIN EL_DROPEO.Supermercado s ON sucursales.SUPER_CUIT = s.cuit;
 
+/*
+ Migración de tipos de caja
+ */
+INSERT INTO EL_DROPEO.Tipo_Caja (descripcion)
+SELECT DISTINCT SUBSTRING(CAJA_TIPO, CHARINDEX(' ', CAJA_TIPO, CHARINDEX(' ', CAJA_TIPO) + 1) + 1, LEN(CAJA_TIPO))
+FROM gd_esquema.Maestra
+WHERE CAJA_TIPO IS NOT NULL;
+
+/*
+ Migración de cajas
+ */
+INSERT INTO EL_DROPEO.Caja (numero, tipo_caja_id, sucursal_id)
+SELECT 
+	CAJA_NUMERO,
+	tc.id AS tipo_caja_id,
+	s.id AS sucursal_id
+FROM (
+    SELECT DISTINCT
+		CAJA_NUMERO,
+        SUCURSAL_NOMBRE,
+        CAJA_TIPO
+    FROM gd_esquema.Maestra
+    WHERE CAJA_TIPO IS NOT NULL
+) cajas
+INNER JOIN EL_DROPEO.Sucursal s ON cajas.SUCURSAL_NOMBRE = s.nombre
+INNER JOIN EL_DROPEO.Tipo_Caja tc ON tc.descripcion LIKE '%' + cajas.CAJA_TIPO + '%'
+
+/*
+ Migración de empleados
+ */
+INSERT INTO EL_DROPEO.Empleado (nombre, apellido, dni, fecha_nacimiento, fecha_ingreso, sucursal_id)
+SELECT 
+    EMPLEADO_NOMBRE,
+    EMPLEADO_APELLIDO,
+    EMPLEADO_DNI,
+    CONVERT(DATETIME, EMPLEADO_FECHA_NAC, 101) AS fecha_nacimiento,
+    CONVERT(DATETIME, EMPLEADO_FECHA_ING, 101) AS fecha_ingreso,
+    s.id AS sucursal_id
+FROM gd_esquema.Maestra
+INNER JOIN EL_DROPEO.Sucursal s ON SUCURSAL_NOMBRE = EMPLEADO_SUCURSAL
+
+
 END
 GO
 
