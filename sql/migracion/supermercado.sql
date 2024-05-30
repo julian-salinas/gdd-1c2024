@@ -59,20 +59,6 @@ WHERE SUPER_CONDICION_FISCAL IS NOT NULL
 /*
  Migración de supermercados
  */
-WITH CTE AS (
-    SELECT 
-        SUPER_NOMBRE,
-        SUPER_RAZON_SOC,
-        SUPER_CUIT,
-        CAST(SUBSTRING(SUPER_IIBB, PATINDEX('%[0-9]%', SUPER_IIBB), LEN(SUPER_IIBB)) AS BIGINT) AS SUPER_IIBB,
-        u.id AS ubicacion_id,
-        CONVERT(DATETIME, SUPER_FECHA_INI_ACTIVIDAD, 101) AS fecha_inicio,
-        cf.id AS condicion_fiscal_id,
-        ROW_NUMBER() OVER (PARTITION BY SUPER_CUIT ORDER BY SUPER_CUIT) AS rn
-    FROM gd_esquema.Maestra m
-    INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura)
-    INNER JOIN EL_DROPEO.Condicion_Fiscal cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
-)
 INSERT INTO EL_DROPEO.Supermercado (nombre, razon_social, cuit, iibb, ubicacion_id, fecha_inicio, condicion_fiscal_id)
 SELECT 
     SUPER_NOMBRE,
@@ -82,8 +68,27 @@ SELECT
     ubicacion_id,
     fecha_inicio,
     condicion_fiscal_id
-FROM CTE
-WHERE rn = 1;
+FROM (
+    SELECT DISTINCT
+        SUPER_NOMBRE,
+        SUPER_RAZON_SOC,
+        SUPER_CUIT,
+        CAST(SUBSTRING(SUPER_IIBB, PATINDEX('%[0-9]%', SUPER_IIBB), LEN(SUPER_IIBB)) AS BIGINT) AS SUPER_IIBB,
+        u.id AS ubicacion_id,
+        CONVERT(DATETIME, SUPER_FECHA_INI_ACTIVIDAD, 101) AS fecha_inicio,
+        cf.id AS condicion_fiscal_id,
+		SUPER_DOMICILIO
+    FROM gd_esquema.Maestra m
+    INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura)
+    INNER JOIN EL_DROPEO.Condicion_Fiscal cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
+) as supermercados
+-- WHERE condicion_fiscal_id = 2
+/* NOTA: 
+El where debe descomentarse para ejecutar la query porque hay supermercados 
+exactamente iguales pero con distinta condición fiscal.
+El problema es que el cuit tiene la constraint UNIQUE, no debería haber dos supermercados con el mismo cuit.
+Confirmar si es correcto o no.
+*/
 
 /*
  Migración de sucursales
