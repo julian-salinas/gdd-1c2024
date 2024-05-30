@@ -141,7 +141,7 @@ INNER JOIN EL_DROPEO.Tipo_Caja tc ON tc.descripcion LIKE '%' + cajas.CAJA_TIPO +
 /*
  Migración de empleados
  */
-INSERT INTO EL_DROPEO.Empleado (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento)
+INSERT INTO EL_DROPEO.Empleado (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, sucursal_id)
 SELECT 
     EMPLEADO_NOMBRE,
     EMPLEADO_APELLIDO,
@@ -149,8 +149,10 @@ SELECT
     CONVERT(DATETIME, EMPLEADO_FECHA_REGISTRO, 101) AS fecha_registro,
     EMPLEADO_TELEFONO,
     EMPLEADO_MAIL,
-    CONVERT(DATETIME, EMPLEADO_FECHA_NACIMIENTO, 101) AS fecha_nacimiento
+    CONVERT(DATETIME, EMPLEADO_FECHA_NACIMIENTO, 101) AS fecha_nacimiento,
+    s.id AS sucursal_id
 FROM gd_esquema.Maestra
+INNER JOIN EL_DROPEO.Sucursal s ON SUCURSAL_NOMBRE = s.nombre
 
 /*
  Migración de clientes

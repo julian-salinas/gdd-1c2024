@@ -82,13 +82,14 @@ CREATE TABLE EL_DROPEO.Comprobante(
 
 CREATE TABLE EL_DROPEO.Empleado(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-	nombre NVARCHAR(255) NOT NULL,
-	apellido NVARCHAR(255) NOT NULL,
+	nombre NVARCHAR(255),
+	apellido NVARCHAR(255),
 	dni INT NOT NULL UNIQUE,
 	fecha_registro DATETIME,
 	telefono INT,
 	mail NVARCHAR(255),
-	fecha_nacimiento DATE
+	fecha_nacimiento DATE,
+    sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sucursal
 )
 
 CREATE TABLE EL_DROPEO.Venta(
