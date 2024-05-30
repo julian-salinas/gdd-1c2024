@@ -136,7 +136,7 @@ FROM (
     WHERE CAJA_TIPO IS NOT NULL
 ) cajas
 INNER JOIN EL_DROPEO.Sucursal s ON cajas.SUCURSAL_NOMBRE = s.nombre
-INNER JOIN EL_DROPEO.Tipo_Caja tc ON tc.descripcion LIKE '%' + cajas.CAJA_TIPO + '%'
+INNER JOIN EL_DROPEO.Tipo_Caja tc ON cajas.CAJA_TIPO LIKE '%' + tc.descripcion
 
 /*
  Migración de empleados

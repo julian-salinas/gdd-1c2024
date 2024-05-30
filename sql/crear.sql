@@ -112,7 +112,7 @@ CREATE TABLE EL_DROPEO.Medio_De_Pago(
 CREATE TABLE EL_DROPEO.Detalle(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	cliente_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Cliente,
-	numero_tarjeta INT NOT NULL,
+	numero_tarjeta NVARCHAR(255) NOT NULL,
 	vencimiento_tarjeta DATE NOT NULL,
 	cuotas INT NOT NULL
 )
