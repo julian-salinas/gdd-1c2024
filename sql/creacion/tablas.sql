@@ -83,7 +83,6 @@ CREATE TABLE EL_DROPEO.Empleado(
 	apellido NVARCHAR(255) NOT NULL,
 	dni INT NOT NULL UNIQUE,
 	fecha_registro DATETIME,
-	sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sucursal,
 	telefono INT,
 	mail NVARCHAR(255),
 	fecha_nacimiento DATE
