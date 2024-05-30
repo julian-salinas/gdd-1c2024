@@ -2,8 +2,8 @@ USE GD1C2024
 GO
 
 -- Eliminar procedimientos almacenados si existen
-IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND object_id = OBJECT_ID(N'[EL_DROPEO].[MIGRACION]'))
-    DROP PROCEDURE EL_DROPEO.MIGRACION
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND object_id = OBJECT_ID(N'[EL_DROPEO].[CREAR_TABLAS]'))
+    DROP PROCEDURE EL_DROPEO.CREAR_TABLAS
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND object_id = OBJECT_ID(N'[EL_DROPEO].[MIGRAR_SUPERMERCADOS]'))
@@ -78,6 +78,9 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Loc
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Provincia') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Provincia
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Condicion_Fiscal') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Condicion_Fiscal
 GO
 
 IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'EL_DROPEO')
