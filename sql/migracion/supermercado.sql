@@ -79,10 +79,9 @@ FROM (
         cf.id AS condicion_fiscal_id,
 		SUPER_DOMICILIO
     FROM gd_esquema.Maestra m
-    INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura)
+    INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND m.SUPER_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
     INNER JOIN EL_DROPEO.Condicion_Fiscal cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
 ) as supermercados
--- WHERE condicion_fiscal_id = 2
 /* NOTA: 
 El where debe descomentarse para ejecutar la query porque hay supermercados 
 exactamente iguales pero con distinta condición fiscal.
@@ -108,7 +107,7 @@ FROM (
     FROM gd_esquema.Maestra
     WHERE SUCURSAL_DIRECCION IS NOT NULL
 ) sucursales
-INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura)
+INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura) AND sucursales.localidad = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
 INNER JOIN EL_DROPEO.Localidad l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincia WHERE id = l.provincia_id)
 INNER JOIN EL_DROPEO.Supermercado s ON sucursales.SUPER_CUIT = s.cuit;
 
@@ -142,17 +141,45 @@ INNER JOIN EL_DROPEO.Tipo_Caja tc ON tc.descripcion LIKE '%' + cajas.CAJA_TIPO +
 /*
  Migración de empleados
  */
-INSERT INTO EL_DROPEO.Empleado (nombre, apellido, dni, fecha_nacimiento, fecha_ingreso, sucursal_id)
+INSERT INTO EL_DROPEO.Empleado (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento)
 SELECT 
     EMPLEADO_NOMBRE,
     EMPLEADO_APELLIDO,
     EMPLEADO_DNI,
-    CONVERT(DATETIME, EMPLEADO_FECHA_NAC, 101) AS fecha_nacimiento,
-    CONVERT(DATETIME, EMPLEADO_FECHA_ING, 101) AS fecha_ingreso,
-    s.id AS sucursal_id
+    CONVERT(DATETIME, EMPLEADO_FECHA_REGISTRO, 101) AS fecha_registro,
+    EMPLEADO_TELEFONO,
+    EMPLEADO_MAIL,
+    CONVERT(DATETIME, EMPLEADO_FECHA_NACIMIENTO, 101) AS fecha_nacimiento
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Sucursal s ON SUCURSAL_NOMBRE = EMPLEADO_SUCURSAL
 
+/*
+ Migración de clientes
+ */
+INSERT INTO EL_DROPEO.Cliente (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, ubicacion_id)
+SELECT
+    CLIENTE_NOMBRE,
+    CLIENTE_APELLIDO,
+    CLIENTE_DNI,
+    fecha_registro,
+    CLIENTE_TELEFONO,
+    CLIENTE_MAIL,
+    fecha_nacimiento,
+    ubicacion_id
+FROM (
+    SELECT DISTINCT
+        CLIENTE_NOMBRE,
+        CLIENTE_APELLIDO,
+        CLIENTE_DNI,
+        CONVERT(DATETIME, CLIENTE_FECHA_REGISTRO, 101) AS fecha_registro,
+        CLIENTE_TELEFONO,
+        CLIENTE_MAIL,
+        CONVERT(DATETIME, CLIENTE_FECHA_NACIMIENTO, 101) AS fecha_nacimiento,
+        u.id AS ubicacion_id,
+        ROW_NUMBER() OVER (PARTITION BY CLIENTE_DNI ORDER BY CLIENTE_FECHA_REGISTRO DESC) AS rn
+    FROM gd_esquema.Maestra m
+    INNER JOIN EL_DROPEO.Ubicacion u ON CLIENTE_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND CLIENTE_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
+) as clientes
+WHERE rn = 1
 
 END
 GO
