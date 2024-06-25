@@ -644,23 +644,27 @@ INNER JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
 INNER JOIN EL_DROPEO.Pagos P ON P.venta_id = V.id
 WHERE DESCUENTO_CODIGO IS NOT NULL;
 
-
 INSERT INTO EL_DROPEO.Item (venta_id, producto_id, cantidad, precio_unitario)
 SELECT DISTINCT
-    V.id AS venta_id,
+    V.venta_id,
     P.product_id AS producto_id,
     SUM(TICKET_DET_CANTIDAD) AS cantidad,
     TICKET_DET_PRECIO
 FROM gd_esquema.Maestra M
-LEFT JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
 LEFT JOIN (
-    SELECT product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre
+    SELECT DISTINCT venta.id as venta_id, venta.numero_ticket, s.nombre as nombre_sucursal
+    FROM EL_DROPEO.Venta venta
+    LEFT JOIN EL_DROPEO.Sucursal s ON s.id = venta.caja_sucursal_id
+) V ON V.numero_ticket = TICKET_NUMERO AND nombre_sucursal = SUCURSAL_NOMBRE
+LEFT JOIN (
+    SELECT distinct product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre, C.nombre as categoria_nombre
     FROM EL_DROPEO.Producto Product
     LEFT JOIN EL_DROPEO.Marca M ON M.id = Product.marca_id
     LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
-) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre
+	LEFT JOIN EL_DROPEO.Categoria C ON C.id = S.categoria_id
+) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre AND PRODUCTO_CATEGORIA =  P.categoria_nombre
 WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
-GROUP BY V.id, P.product_id, TICKET_DET_PRECIO;
+GROUP BY V.venta_id, P.product_id, TICKET_DET_PRECIO;
 
 
 END
