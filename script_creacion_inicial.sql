@@ -227,6 +227,7 @@ CREATE TABLE EL_DROPEO.Pagos(
 	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
 	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medio_De_Pago,
 	detalle_id INT FOREIGN KEY REFERENCES EL_DROPEO.Detalle
+    -- descuento_aplicado DECIMAL(18, 2),
 )
 
 CREATE TABLE EL_DROPEO.Descuentos(
@@ -237,6 +238,12 @@ CREATE TABLE EL_DROPEO.Descuentos(
 	monto DECIMAL(18, 2) NOT NULL,
 	tope DECIMAL(18, 2) NOT NULL,
 	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medio_De_Pago
+)
+
+CREATE TABLE EL_DROPEO.Descuentos_Pagos(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    descuento_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Descuentos,
+    pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Pagos
 )
 
 CREATE TABLE EL_DROPEO.Marca(
@@ -265,11 +272,36 @@ CREATE TABLE EL_DROPEO.Producto(
 )
 
 CREATE TABLE EL_DROPEO.Item(
+	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
 	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Producto,
 	cantidad INT NOT NULL,
-	precio_unitario DECIMAL(18, 2) NOT NULL,
-	PRIMARY KEY(venta_id, producto_id)
+	precio_unitario DECIMAL(18, 2) NOT NULL
+)
+
+INSERT INTO EL_DROPEO.Item (venta_id, producto_id, cantidad, precio_unitario)
+SELECT DISTINCT
+    V.id AS venta_id,
+    P.id AS producto_id,
+    TICKET_DET_CANTIDAD,
+    TICKET_DET_PRECIO
+FROM gd_esquema.Maestra
+LEFT JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
+LEFT JOIN EL_DROPEO.Marca M ON M.id = P.marca_id
+LEFT JOIN (
+    SELECT id, marca_id, sub_categoria_id, nombre
+    FROM EL_DROPEO.Producto Product
+    LEFT JOIN EL_DROPEO.Marca M ON M.id = Product.marca_id
+    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
+) P ON PRODUCTO_NOMBRE = P.nombre AND PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
+WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
+
+
+CREATE TABLE EL_DROPEO.Promocion_Item(
+    promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
+    item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Item,
+    descuento_aplicado DECIMAL(18, 2) NOT NULL,
+    PRIMARY KEY(promocion_id, item_id)
 )
 
 CREATE TABLE EL_DROPEO.Promocion(
@@ -512,7 +544,7 @@ LEFT JOIN EL_DROPEO.Marca M ON M.id = P.marca_id
 LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = P.sub_categoria_id
 LEFT JOIN EL_DROPEO.Categoria C ON C.id = S.categoria_id
 LEFT JOIN gd_esquema.Maestra Maestra ON Maestra.PRODUCTO_NOMBRE = P.nombre AND Maestra.PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = s.nombre AND PRODUCTO_CATEGORIA = c.nombre
-INNER JOIN EL_DROPEO.Promocion Promo ON Maestra.PROMO_CODIGO = Promo.id
+LEFT JOIN EL_DROPEO.Promocion Promo ON Maestra.PROMO_CODIGO = Promo.id
 WHERE Maestra.PROMO_CODIGO IS NOT NULL AND Maestra.PRODUCTO_NOMBRE IS NOT NULL
 
 INSERT INTO EL_DROPEO.Medio_De_Pago(descripcion, tipo_pago)
@@ -568,7 +600,7 @@ FROM gd_esquema.Maestra
 INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
 WHERE CLIENTE_DNI IS NOT NULL
 
-INSERT INTO EL_DROPEO.Pagos (fecha, medio_de_pago_id, detalle_id, importe, venta_id)
+INSERT INTO EL_DROPEO.Pagos (fecha, medio_de_pago_id, detalle_id, importe, venta_id, promocion_aplicada_descuento)
 SELECT DISTINCT
     PAGO_FECHA,
     MP.id AS medio_de_pago_id,
@@ -601,6 +633,35 @@ INNER JOIN EL_DROPEO.Estado_Envio EE ON EE.descripcion = ENVIO_ESTADO
 INNER JOIN EL_DROPEO.Sucursal S ON S.nombre = SUCURSAL_NOMBRE
 INNER JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO AND V.caja_sucursal_id = S.id
 WHERE ENVIO_COSTO IS NOT NULL AND ENVIO_FECHA_PROGRAMADA IS NOT NULL AND ENVIO_HORA_INICIO IS NOT NULL AND ENVIO_HORA_FIN IS NOT NULL AND TICKET_NUMERO IS NOT NULL
+
+INSERT INTO EL_DROPEO.Descuentos_Pagos (descuento_id, pago_id, descuento_aplicado)
+SELECT DISTINCT
+    DESCUENTO_CODIGO,
+    P.id AS pago_id,
+	PAGO_DESCUENTO_APLICADO
+FROM gd_esquema.Maestra
+INNER JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
+INNER JOIN EL_DROPEO.Pagos P ON P.venta_id = V.id
+WHERE DESCUENTO_CODIGO IS NOT NULL;
+
+
+INSERT INTO EL_DROPEO.Item (venta_id, producto_id, cantidad, precio_unitario)
+SELECT DISTINCT
+    V.id AS venta_id,
+    P.product_id AS producto_id,
+    SUM(TICKET_DET_CANTIDAD) AS cantidad,
+    TICKET_DET_PRECIO
+FROM gd_esquema.Maestra M
+LEFT JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
+LEFT JOIN (
+    SELECT product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre
+    FROM EL_DROPEO.Producto Product
+    LEFT JOIN EL_DROPEO.Marca M ON M.id = Product.marca_id
+    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
+) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre
+WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
+GROUP BY V.id, P.product_id, TICKET_DET_PRECIO;
+
 
 END
 GO
