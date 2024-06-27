@@ -47,6 +47,9 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Marca') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Marca
 GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Descuentos_Pagos') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Descuentos_Pagos
+GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Descuentos') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Descuentos
 GO
