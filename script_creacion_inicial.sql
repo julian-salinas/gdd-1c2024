@@ -37,8 +37,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Regla') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Regla
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promocion') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Promocion
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promociones') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Promociones
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Productos') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Productos
@@ -305,7 +305,7 @@ CREATE TABLE EL_DROPEO.Items(
 --) P ON PRODUCTO_NOMBRE = P.nombre AND PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
 --WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
 
-CREATE TABLE EL_DROPEO.Promocion(
+CREATE TABLE EL_DROPEO.Promociones(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL,
 	fecha_inicio DATETIME NOT NULL,
@@ -313,7 +313,7 @@ CREATE TABLE EL_DROPEO.Promocion(
 )
 
 CREATE TABLE EL_DROPEO.Promocion_Item(
-    promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
+    promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promociones,
     item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Items,
     promocion_aplicada_descuento DECIMAL(18, 2) NOT NULL,
     PRIMARY KEY(promocion_id, item_id)
@@ -327,11 +327,11 @@ CREATE TABLE EL_DROPEO.Regla(
 	cantidad_maxima INT NOT NULL,
 	misma_marca BIT NOT NULL,
 	mismo_producto BIT NOT NULL,
-	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion
+	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promociones
 )
 
 CREATE TABLE EL_DROPEO.Promocion_Producto(
-	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
+	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promociones,
 	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Productos,
 	PRIMARY KEY(promocion_id, producto_id)
 )
@@ -532,18 +532,18 @@ LEFT JOIN (
 ) cs ON PRODUCTO_CATEGORIA = cs.nombre_categoria AND PRODUCTO_SUB_CATEGORIA = cs.nombre_subcategoria
 WHERE PRODUCTO_NOMBRE IS NOT NULL AND PRODUCTO_DESCRIPCION IS NOT NULL AND PRODUCTO_PRECIO IS NOT NULL
 
-SET IDENTITY_INSERT EL_DROPEO.Promocion ON
-INSERT INTO EL_DROPEO.Promocion(id, descripcion, fecha_inicio, fecha_fin)
+SET IDENTITY_INSERT EL_DROPEO.Promociones ON
+INSERT INTO EL_DROPEO.Promociones(id, descripcion, fecha_inicio, fecha_fin)
 SELECT DISTINCT PROMO_CODIGO, PROMOCION_DESCRIPCION, PROMOCION_FECHA_INICIO, PROMOCION_FECHA_FIN
 FROM gd_esquema.Maestra
 WHERE PROMO_CODIGO IS NOT NULL
-DBCC checkident ('EL_DROPEO.Promocion', reseed, 131)
-SET IDENTITY_INSERT EL_DROPEO.Promocion OFF
+DBCC checkident ('EL_DROPEO.Promociones', reseed, 131)
+SET IDENTITY_INSERT EL_DROPEO.Promociones OFF
 
 INSERT INTO EL_DROPEO.Regla(descripcion, cantidad_aplicable_descuento, cantidad_aplicable_regla, cantidad_maxima, misma_marca, mismo_producto, promocion_id)
 SELECT DISTINCT REGLA_DESCRIPCION, REGLA_CANT_APLICA_DESCUENTO, REGLA_CANT_APLICABLE_REGLA, REGLA_CANT_MAX_PROD, REGLA_APLICA_MISMA_MARCA, REGLA_APLICA_MISMO_PROD, P.id
 FROM gd_esquema.Maestra
-LEFT JOIN EL_DROPEO.Promocion P on P.id = PROMO_CODIGO
+LEFT JOIN EL_DROPEO.Promociones P on P.id = PROMO_CODIGO
 WHERE REGLA_DESCRIPCION IS NOT NULL
 
 INSERT INTO EL_DROPEO.Promocion_Producto(producto_id, promocion_id)
@@ -553,7 +553,7 @@ LEFT JOIN EL_DROPEO.Marcas M ON M.id = P.marca_id
 LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = P.sub_categoria_id
 LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
 LEFT JOIN gd_esquema.Maestra Maestra ON Maestra.PRODUCTO_NOMBRE = P.nombre AND Maestra.PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = s.nombre AND PRODUCTO_CATEGORIA = c.nombre
-LEFT JOIN EL_DROPEO.Promocion Promo ON Maestra.PROMO_CODIGO = Promo.id
+LEFT JOIN EL_DROPEO.Promociones Promo ON Maestra.PROMO_CODIGO = Promo.id
 WHERE Maestra.PROMO_CODIGO IS NOT NULL AND Maestra.PRODUCTO_NOMBRE IS NOT NULL
 
 INSERT INTO EL_DROPEO.Medios_De_Pago(descripcion, tipo_pago)
