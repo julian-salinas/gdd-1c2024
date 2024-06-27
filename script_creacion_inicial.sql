@@ -21,6 +21,11 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Est
     DROP TABLE EL_DROPEO.Estado_Envio
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promocion_Item') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Promocion_Item
+GO
+
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Item') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Item
 GO
@@ -230,7 +235,7 @@ CREATE TABLE EL_DROPEO.Pagos(
 	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
 	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medio_De_Pago,
 	detalle_id INT FOREIGN KEY REFERENCES EL_DROPEO.Detalle
-    -- descuento_aplicado DECIMAL(18, 2),
+    -- descuento_aplicado DECIMAL(18, 2)
 )
 
 CREATE TABLE EL_DROPEO.Descuentos(
@@ -246,7 +251,8 @@ CREATE TABLE EL_DROPEO.Descuentos(
 CREATE TABLE EL_DROPEO.Descuentos_Pagos(
     id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
     descuento_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Descuentos,
-    pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Pagos
+    pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Pagos,
+    descuento_aplicado DECIMAL(18, 2) NOT NULL
 )
 
 CREATE TABLE EL_DROPEO.Marca(
@@ -282,36 +288,35 @@ CREATE TABLE EL_DROPEO.Item(
 	precio_unitario DECIMAL(18, 2) NOT NULL
 )
 
-INSERT INTO EL_DROPEO.Item (venta_id, producto_id, cantidad, precio_unitario)
-SELECT DISTINCT
-    V.id AS venta_id,
-    P.id AS producto_id,
-    TICKET_DET_CANTIDAD,
-    TICKET_DET_PRECIO
-FROM gd_esquema.Maestra
-LEFT JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
-LEFT JOIN EL_DROPEO.Marca M ON M.id = P.marca_id
-LEFT JOIN (
-    SELECT id, marca_id, sub_categoria_id, nombre
-    FROM EL_DROPEO.Producto Product
-    LEFT JOIN EL_DROPEO.Marca M ON M.id = Product.marca_id
-    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
-) P ON PRODUCTO_NOMBRE = P.nombre AND PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
-WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
-
-
-CREATE TABLE EL_DROPEO.Promocion_Item(
-    promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
-    item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Item,
-    descuento_aplicado DECIMAL(18, 2) NOT NULL,
-    PRIMARY KEY(promocion_id, item_id)
-)
+--INSERT INTO EL_DROPEO.Item (venta_id, producto_id, cantidad, precio_unitario)
+--SELECT DISTINCT
+--    V.id AS venta_id,
+--    P.id AS producto_id,
+--    TICKET_DET_CANTIDAD,
+--    TICKET_DET_PRECIO
+--FROM gd_esquema.Maestra
+--LEFT JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
+--LEFT JOIN EL_DROPEO.Marca M ON M.id = P.marca_id
+--LEFT JOIN (
+--    SELECT id, marca_id, sub_categoria_id, nombre
+--    FROM EL_DROPEO.Producto Product
+--    LEFT JOIN EL_DROPEO.Marca M ON M.id = Product.marca_id
+--    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
+--) P ON PRODUCTO_NOMBRE = P.nombre AND PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
+--WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
 
 CREATE TABLE EL_DROPEO.Promocion(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL,
 	fecha_inicio DATETIME NOT NULL,
 	fecha_fin DATETIME NOT NULL,
+)
+
+CREATE TABLE EL_DROPEO.Promocion_Item(
+    promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
+    item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Item,
+    promocion_aplicada_descuento DECIMAL(18, 2) NOT NULL,
+    PRIMARY KEY(promocion_id, item_id)
 )
 
 CREATE TABLE EL_DROPEO.Regla(
@@ -350,6 +355,7 @@ CREATE TABLE EL_DROPEO.Envio(
 END
 
 GO
+
 CREATE PROCEDURE EL_DROPEO.MIGRACION AS
 BEGIN
 
@@ -583,15 +589,15 @@ INNER JOIN (
 ) cs ON cs.numero = CAJA_NUMERO AND cs.nombre = SUCURSAL_NOMBRE
 WHERE TICKET_FECHA_HORA IS NOT NULL AND TICKET_TIPO_COMPROBANTE IS NOT NULL AND EMPLEADO_DNI IS NOT NULL AND CAJA_NUMERO IS NOT NULL
 
-INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
-SELECT DISTINCT
-    C.id AS cliente_id,
-    PAGO_TARJETA_NRO,
-    PAGO_TARJETA_FECHA_VENC,
-    PAGO_TARJETA_CUOTAS
-FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
-WHERE PAGO_TARJETA_NRO IS NOT NULL AND PAGO_TARJETA_FECHA_VENC IS NOT NULL AND PAGO_TARJETA_CUOTAS IS NOT NULL
+--INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas) va este pero no inserta nada pq no hay pagos con tarjeta
+--SELECT DISTINCT
+--    C.id AS cliente_id,
+--    PAGO_TARJETA_NRO,
+--    PAGO_TARJETA_FECHA_VENC,
+--    PAGO_TARJETA_CUOTAS
+--FROM gd_esquema.Maestra
+--INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
+--WHERE PAGO_TARJETA_NRO IS NOT NULL AND PAGO_TARJETA_FECHA_VENC IS NOT NULL AND PAGO_TARJETA_CUOTAS IS NOT NULL
 
 INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
 SELECT DISTINCT
@@ -603,7 +609,7 @@ FROM gd_esquema.Maestra
 INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
 WHERE CLIENTE_DNI IS NOT NULL
 
-INSERT INTO EL_DROPEO.Pagos (fecha, medio_de_pago_id, detalle_id, importe, venta_id, promocion_aplicada_descuento)
+INSERT INTO EL_DROPEO.Pagos (fecha, medio_de_pago_id, detalle_id, importe, venta_id)
 SELECT DISTINCT
     PAGO_FECHA,
     MP.id AS medio_de_pago_id,
@@ -668,6 +674,28 @@ LEFT JOIN (
 ) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre AND PRODUCTO_CATEGORIA =  P.categoria_nombre
 WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
 GROUP BY V.venta_id, P.product_id, TICKET_DET_PRECIO;
+
+INSERT INTO EL_DROPEO.Promocion_Item (promocion_id, item_id, promocion_aplicada_descuento)
+SELECT DISTINCT
+    M.PROMO_CODIGO,
+    I.id AS item_id,
+    SUM(M.PROMO_APLICADA_DESCUENTO)
+FROM gd_esquema.Maestra M
+LEFT JOIN (
+    SELECT DISTINCT venta.id as venta_id, venta.numero_ticket, s.nombre as nombre_sucursal
+    FROM EL_DROPEO.Venta venta
+    LEFT JOIN EL_DROPEO.Sucursal s ON s.id = venta.caja_sucursal_id
+) V ON V.numero_ticket = TICKET_NUMERO AND nombre_sucursal = SUCURSAL_NOMBRE
+LEFT JOIN (
+    SELECT distinct product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre, C.nombre as categoria_nombre
+    FROM EL_DROPEO.Producto Product
+    LEFT JOIN EL_DROPEO.Marca M ON M.id = Product.marca_id
+    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
+	LEFT JOIN EL_DROPEO.Categoria C ON C.id = S.categoria_id
+) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre AND PRODUCTO_CATEGORIA =  P.categoria_nombre
+LEFT JOIN EL_DROPEO.Item I on I.venta_id = V.venta_id and I.producto_id = P.product_id
+WHERE M.PROMO_CODIGO IS NOT NULL
+GROUP BY I.id, M.PROMO_CODIGO
 
 
 END
