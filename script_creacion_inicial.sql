@@ -70,8 +70,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Venta') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Venta
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Empleado') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Empleado
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Empleados') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Empleados
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Comprobantes') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Comprobantes
@@ -190,7 +190,7 @@ CREATE TABLE EL_DROPEO.Comprobantes(
 	tipo_comprobante NVARCHAR(255) NOT NULL,
 )
 
-CREATE TABLE EL_DROPEO.Empleado(
+CREATE TABLE EL_DROPEO.Empleados(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255),
 	apellido NVARCHAR(255),
@@ -207,7 +207,7 @@ CREATE TABLE EL_DROPEO.Venta(
 	numero_ticket INT NOT NULL,
 	fecha_hora DATETIME NOT NULL,
 	comprobante_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Comprobantes,
-	empleado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Empleado,
+	empleado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Empleados,
 	caja_numero INT NOT NULL,
 	caja_sucursal_id INT NOT NULL,
 	FOREIGN KEY (caja_numero, caja_sucursal_id) REFERENCES EL_DROPEO.Cajas(numero, sucursal_id)
@@ -463,7 +463,7 @@ FROM (
 INNER JOIN EL_DROPEO.Sucursal s ON cajas.SUCURSAL_NOMBRE = s.nombre
 INNER JOIN EL_DROPEO.Tipo_Caja tc ON cajas.CAJA_TIPO LIKE '%' + tc.descripcion
 
-INSERT INTO EL_DROPEO.Empleado (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, sucursal_id)
+INSERT INTO EL_DROPEO.Empleados (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, sucursal_id)
 SELECT DISTINCT
     EMPLEADO_NOMBRE,
     EMPLEADO_APELLIDO,
@@ -582,7 +582,7 @@ SELECT DISTINCT
     cs.id AS caja_sucursal_id
 FROM gd_esquema.Maestra
 INNER JOIN EL_DROPEO.Comprobantes Co ON Co.tipo_comprobante = TICKET_TIPO_COMPROBANTE
-INNER JOIN EL_DROPEO.Empleado E ON E.dni = EMPLEADO_DNI
+INNER JOIN EL_DROPEO.Empleados E ON E.dni = EMPLEADO_DNI
 INNER JOIN (
 	SELECT DISTINCT cajas.numero, sucursal.nombre, sucursal.id FROM EL_DROPEO.Cajas
 	INNER JOIN EL_DROPEO.Sucursal sucursal ON sucursal.id = cajas.sucursal_id
