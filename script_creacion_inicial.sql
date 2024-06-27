@@ -13,8 +13,8 @@ IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND object_id = OBJECT_ID(
 GO
 
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Envio') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Envio
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Envios') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Envios
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Estado_Envio') AND type in (N'U'))
@@ -341,7 +341,7 @@ CREATE TABLE EL_DROPEO.Estado_Envio(
 	descripcion NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Envio(
+CREATE TABLE EL_DROPEO.Envios(
 	costo DECIMAL(18, 2) NOT NULL,
 	fecha_programada DATETIME NOT NULL,
 	hora_inicio DECIMAL(18, 2) NOT NULL,
@@ -628,7 +628,7 @@ SELECT DISTINCT ENVIO_ESTADO
 FROM gd_esquema.Maestra
 WHERE ENVIO_ESTADO IS NOT NULL	
 
-INSERT INTO EL_DROPEO.Envio (costo, fecha_programada, hora_inicio, hora_fin, fecha_entrega, estado_id, venta_id)
+INSERT INTO EL_DROPEO.Envios (costo, fecha_programada, hora_inicio, hora_fin, fecha_entrega, estado_id, venta_id)
 SELECT DISTINCT
     ENVIO_COSTO,
     ENVIO_FECHA_PROGRAMADA,
