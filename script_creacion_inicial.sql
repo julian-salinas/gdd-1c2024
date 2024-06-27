@@ -88,8 +88,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Sucursales') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Sucursales
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Supermercado') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Supermercado
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Supermercados') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Supermercados
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ubicacion') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Ubicacion
@@ -143,7 +143,7 @@ CREATE TABLE EL_DROPEO.Condiciones_Fiscales(
 	descripcion NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Supermercado(
+CREATE TABLE EL_DROPEO.Supermercados(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
 	razon_social NVARCHAR(255) NOT NULL,
@@ -158,7 +158,7 @@ CREATE TABLE EL_DROPEO.Sucursales(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
 	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicacion,
-	supermercado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Supermercado
+	supermercado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Supermercados
 )
 
 CREATE TABLE EL_DROPEO.Tipos_Caja(
@@ -399,7 +399,7 @@ INSERT INTO EL_DROPEO.Condiciones_Fiscales (descripcion)
 SELECT DISTINCT SUPER_CONDICION_FISCAL FROM gd_esquema.Maestra
 WHERE SUPER_CONDICION_FISCAL IS NOT NULL
 
-INSERT INTO EL_DROPEO.Supermercado (nombre, razon_social, cuit, iibb, ubicacion_id, fecha_inicio, condicion_fiscal_id)
+INSERT INTO EL_DROPEO.Supermercados (nombre, razon_social, cuit, iibb, ubicacion_id, fecha_inicio, condicion_fiscal_id)
 SELECT 
     SUPER_NOMBRE,
     SUPER_RAZON_SOC,
@@ -440,7 +440,7 @@ FROM (
 ) sucursales
 INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura) AND sucursales.localidad = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
 INNER JOIN EL_DROPEO.Localidades l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincias WHERE id = l.provincia_id)
-INNER JOIN EL_DROPEO.Supermercado s ON sucursales.SUPER_CUIT = s.cuit;
+INNER JOIN EL_DROPEO.Supermercados s ON sucursales.SUPER_CUIT = s.cuit;
 
 INSERT INTO EL_DROPEO.Tipos_Caja (descripcion)
 SELECT DISTINCT SUBSTRING(CAJA_TIPO, CHARINDEX(' ', CAJA_TIPO, CHARINDEX(' ', CAJA_TIPO) + 1) + 1, LEN(CAJA_TIPO))
