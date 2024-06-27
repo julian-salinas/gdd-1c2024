@@ -79,8 +79,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cliente') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Cliente
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Caja') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Caja
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cajas') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Cajas
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Tipo_Caja') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Tipo_Caja
@@ -166,7 +166,7 @@ CREATE TABLE EL_DROPEO.Tipo_Caja(
 	descripcion NVARCHAR(255) NOT NULL,
 )
 
-CREATE TABLE EL_DROPEO.Caja(
+CREATE TABLE EL_DROPEO.Cajas(
 	numero INT NOT NULL,
 	tipo_caja_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Tipo_Caja,
 	sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sucursal,
@@ -210,7 +210,7 @@ CREATE TABLE EL_DROPEO.Venta(
 	empleado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Empleado,
 	caja_numero INT NOT NULL,
 	caja_sucursal_id INT NOT NULL,
-	FOREIGN KEY (caja_numero, caja_sucursal_id) REFERENCES EL_DROPEO.Caja(numero, sucursal_id)
+	FOREIGN KEY (caja_numero, caja_sucursal_id) REFERENCES EL_DROPEO.Cajas(numero, sucursal_id)
 )
 
 
@@ -447,7 +447,7 @@ SELECT DISTINCT SUBSTRING(CAJA_TIPO, CHARINDEX(' ', CAJA_TIPO, CHARINDEX(' ', CA
 FROM gd_esquema.Maestra
 WHERE CAJA_TIPO IS NOT NULL;
 
-INSERT INTO EL_DROPEO.Caja (numero, tipo_caja_id, sucursal_id)
+INSERT INTO EL_DROPEO.Cajas (numero, tipo_caja_id, sucursal_id)
 SELECT 
 	CAJA_NUMERO,
 	tc.id AS tipo_caja_id,
@@ -584,8 +584,8 @@ FROM gd_esquema.Maestra
 INNER JOIN EL_DROPEO.Comprobante Co ON Co.tipo_comprobante = TICKET_TIPO_COMPROBANTE
 INNER JOIN EL_DROPEO.Empleado E ON E.dni = EMPLEADO_DNI
 INNER JOIN (
-	SELECT DISTINCT caja.numero, sucursal.nombre, sucursal.id FROM EL_DROPEO.Caja
-	INNER JOIN EL_DROPEO.Sucursal sucursal ON sucursal.id = caja.sucursal_id
+	SELECT DISTINCT cajas.numero, sucursal.nombre, sucursal.id FROM EL_DROPEO.Cajas
+	INNER JOIN EL_DROPEO.Sucursal sucursal ON sucursal.id = cajas.sucursal_id
 ) cs ON cs.numero = CAJA_NUMERO AND cs.nombre = SUCURSAL_NOMBRE
 WHERE TICKET_FECHA_HORA IS NOT NULL AND TICKET_TIPO_COMPROBANTE IS NOT NULL AND EMPLEADO_DNI IS NOT NULL AND CAJA_NUMERO IS NOT NULL
 
