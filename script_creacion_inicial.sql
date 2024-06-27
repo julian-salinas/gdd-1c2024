@@ -21,8 +21,8 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Est
     DROP TABLE EL_DROPEO.Estados_Envio
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promociones_Items') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Promociones_Items
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promociones_X_Items') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Promociones_X_Items
 GO
 
 
@@ -312,7 +312,7 @@ CREATE TABLE EL_DROPEO.Promociones(
 	fecha_fin DATETIME NOT NULL,
 )
 
-CREATE TABLE EL_DROPEO.Promociones_Items(
+CREATE TABLE EL_DROPEO.Promociones_X_Items(
     promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promociones,
     item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Items,
     promocion_aplicada_descuento DECIMAL(18, 2) NOT NULL,
@@ -675,7 +675,7 @@ LEFT JOIN (
 WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
 GROUP BY V.venta_id, P.product_id, TICKET_DET_PRECIO;
 
-INSERT INTO EL_DROPEO.Promociones_Items (promocion_id, item_id, promocion_aplicada_descuento)
+INSERT INTO EL_DROPEO.Promociones_X_Items (promocion_id, item_id, promocion_aplicada_descuento)
 SELECT DISTINCT
     M.PROMO_CODIGO,
     I.id AS item_id,
