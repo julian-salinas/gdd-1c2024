@@ -40,8 +40,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promocion') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Promocion
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Producto') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Producto
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Productos') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Productos
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Sub_Categorias') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Sub_Categorias
@@ -271,7 +271,7 @@ CREATE TABLE EL_DROPEO.Sub_Categorias(
 	nombre NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Producto(
+CREATE TABLE EL_DROPEO.Productos(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
 	descripcion NVARCHAR(255) NOT NULL,
@@ -283,7 +283,7 @@ CREATE TABLE EL_DROPEO.Producto(
 CREATE TABLE EL_DROPEO.Items(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
-	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Producto,
+	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Productos,
 	cantidad INT NOT NULL,
 	precio_unitario DECIMAL(18, 2) NOT NULL
 )
@@ -299,7 +299,7 @@ CREATE TABLE EL_DROPEO.Items(
 --LEFT JOIN EL_DROPEO.Marcas M ON M.id = P.marca_id
 --LEFT JOIN (
 --    SELECT id, marca_id, sub_categoria_id, nombre
---    FROM EL_DROPEO.Producto Product
+--    FROM EL_DROPEO.Productos Product
 --    LEFT JOIN EL_DROPEO.Marcas M ON M.id = Product.marca_id
 --    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
 --) P ON PRODUCTO_NOMBRE = P.nombre AND PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
@@ -332,7 +332,7 @@ CREATE TABLE EL_DROPEO.Regla(
 
 CREATE TABLE EL_DROPEO.Promocion_Producto(
 	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
-	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Producto,
+	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Productos,
 	PRIMARY KEY(promocion_id, producto_id)
 )
 
@@ -519,7 +519,7 @@ FROM gd_esquema.Maestra
 LEFT JOIN EL_DROPEO.Categorias C ON C.nombre = PRODUCTO_CATEGORIA
 WHERE PRODUCTO_CATEGORIA IS NOT NULL AND PRODUCTO_SUB_CATEGORIA IS NOT NULL
 
-INSERT INTO EL_DROPEO.Producto(nombre, descripcion, precio, marca_id, sub_categoria_id) --Typo
+INSERT INTO EL_DROPEO.Productos(nombre, descripcion, precio, marca_id, sub_categoria_id) --Typo
 SELECT DISTINCT PRODUCTO_NOMBRE, PRODUCTO_DESCRIPCION, PRODUCTO_PRECIO, M.id, cs.id
 FROM (
 	SELECT DISTINCT PRODUCTO_NOMBRE, PRODUCTO_DESCRIPCION, PRODUCTO_PRECIO, PRODUCTO_MARCA, PRODUCTO_SUB_CATEGORIA, PRODUCTO_CATEGORIA
@@ -548,7 +548,7 @@ WHERE REGLA_DESCRIPCION IS NOT NULL
 
 INSERT INTO EL_DROPEO.Promocion_Producto(producto_id, promocion_id)
 SELECT DISTINCT P.id, Promo.id
-FROM EL_DROPEO.Producto P
+FROM EL_DROPEO.Productos P
 LEFT JOIN EL_DROPEO.Marcas M ON M.id = P.marca_id
 LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = P.sub_categoria_id
 LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
@@ -667,7 +667,7 @@ LEFT JOIN (
 ) V ON V.numero_ticket = TICKET_NUMERO AND nombre_sucursal = SUCURSAL_NOMBRE
 LEFT JOIN (
     SELECT distinct product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre, C.nombre as categoria_nombre
-    FROM EL_DROPEO.Producto Product
+    FROM EL_DROPEO.Productos Product
     LEFT JOIN EL_DROPEO.Marcas M ON M.id = Product.marca_id
     LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = Product.sub_categoria_id
 	LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
@@ -688,7 +688,7 @@ LEFT JOIN (
 ) V ON V.numero_ticket = TICKET_NUMERO AND nombre_sucursal = SUCURSAL_NOMBRE
 LEFT JOIN (
     SELECT distinct product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre, C.nombre as categoria_nombre
-    FROM EL_DROPEO.Producto Product
+    FROM EL_DROPEO.Productos Product
     LEFT JOIN EL_DROPEO.Marcas M ON M.id = Product.marca_id
     LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = Product.sub_categoria_id
 	LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
