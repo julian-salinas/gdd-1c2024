@@ -13,39 +13,47 @@ IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND object_id = OBJECT_ID(
 GO
 
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Envio') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Envio
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Envios') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Envios
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Estado_Envio') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Estado_Envio
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Estados_Envio') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Estados_Envio
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Item') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Item
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promociones_X_Items') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Promociones_X_Items
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promocion_Producto') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Promocion_Producto
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Items') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Items
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Regla') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Regla
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promociones_X_Productos') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Promociones_X_Productos
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promocion') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Promocion
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Reglas') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Reglas
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Producto') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Producto
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promociones') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Promociones
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Sub_Categoria') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Sub_Categoria
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Productos') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Productos
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Categoria') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Categoria
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Sub_Categorias') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Sub_Categorias
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Marca') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Marca
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Categorias') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Categorias
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Marcas') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Marcas
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Descuentos_Pagos') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Descuentos_Pagos
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Descuentos') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Descuentos
@@ -53,47 +61,47 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Pagos') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Pagos
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Detalle') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Detalle
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Detalles') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Detalles
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Medio_De_Pago') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Medio_De_Pago
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Medios_De_Pago') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Medios_De_Pago
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Venta') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Venta
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ventas') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Ventas
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Empleado') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Empleado
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Empleados') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Empleados
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Comprobante') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Comprobante
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Comprobantes') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Comprobantes
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cliente') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Cliente
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Clientes') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Clientes
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Caja') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Caja
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cajas') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Cajas
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Tipo_Caja') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Tipo_Caja
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Tipos_Caja') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Tipos_Caja
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Sucursal') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Sucursal
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Sucursales') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Sucursales
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Supermercado') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Supermercado
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Supermercados') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Supermercados
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ubicacion') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Ubicacion
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ubicaciones') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Ubicaciones
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Localidad') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Localidad
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Localidades') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Localidades
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Provincia') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Provincia
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Provincias') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Provincias
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Condicion_Fiscal') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Condicion_Fiscal
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Condiciones_Fiscales') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Condiciones_Fiscales
 GO
 
 IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'EL_DROPEO')
@@ -112,60 +120,60 @@ CREATE PROCEDURE EL_DROPEO.CREAR_TABLAS AS BEGIN
  Creación de tablas
 */
 
-CREATE TABLE EL_DROPEO.Provincia(
+CREATE TABLE EL_DROPEO.Provincias(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Localidad(
+CREATE TABLE EL_DROPEO.Localidades(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
-	provincia_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Provincia
+	provincia_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Provincias
 )
 
-CREATE TABLE EL_DROPEO.Ubicacion(
+CREATE TABLE EL_DROPEO.Ubicaciones(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	calle NVARCHAR(255) NOT NULL,
 	altura INT NOT NULL,
-	localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Localidad
+	localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Localidades
 )
 
-CREATE TABLE EL_DROPEO.Condicion_Fiscal(
+CREATE TABLE EL_DROPEO.Condiciones_Fiscales(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Supermercado(
+CREATE TABLE EL_DROPEO.Supermercados(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
 	razon_social NVARCHAR(255) NOT NULL,
 	cuit NVARCHAR(255) NOT NULL UNIQUE,
 	iibb INT NOT NULL,
-	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicacion,
+	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicaciones,
 	fecha_inicio DATETIME NOT NULL,
-	condicion_fiscal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Condicion_Fiscal
+	condicion_fiscal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Condiciones_Fiscales
 )
 
-CREATE TABLE EL_DROPEO.Sucursal(
+CREATE TABLE EL_DROPEO.Sucursales(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
-	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicacion,
-	supermercado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Supermercado
+	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicaciones,
+	supermercado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Supermercados
 )
 
-CREATE TABLE EL_DROPEO.Tipo_Caja(
+CREATE TABLE EL_DROPEO.Tipos_Caja(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL,
 )
 
-CREATE TABLE EL_DROPEO.Caja(
+CREATE TABLE EL_DROPEO.Cajas(
 	numero INT NOT NULL,
-	tipo_caja_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Tipo_Caja,
-	sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sucursal,
+	tipo_caja_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Tipos_Caja,
+	sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sucursales,
 	PRIMARY KEY(numero, sucursal_id)
 )
 
-CREATE TABLE EL_DROPEO.Cliente(
+CREATE TABLE EL_DROPEO.Clientes(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,	
 	apellido NVARCHAR(255) NOT NULL,
@@ -174,15 +182,15 @@ CREATE TABLE EL_DROPEO.Cliente(
 	telefono INT,
 	mail NVARCHAR(255),
 	fecha_nacimiento DATE,
-	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicacion
+	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicaciones
 )
 
-CREATE TABLE EL_DROPEO.Comprobante(
+CREATE TABLE EL_DROPEO.Comprobantes(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	tipo_comprobante NVARCHAR(255) NOT NULL,
 )
 
-CREATE TABLE EL_DROPEO.Empleado(
+CREATE TABLE EL_DROPEO.Empleados(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255),
 	apellido NVARCHAR(255),
@@ -191,30 +199,30 @@ CREATE TABLE EL_DROPEO.Empleado(
 	telefono INT,
 	mail NVARCHAR(255),
 	fecha_nacimiento DATE,
-    sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sucursal
+    sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sucursales
 )
 
-CREATE TABLE EL_DROPEO.Venta(
+CREATE TABLE EL_DROPEO.Ventas(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	numero_ticket INT NOT NULL,
 	fecha_hora DATETIME NOT NULL,
-	comprobante_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Comprobante,
-	empleado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Empleado,
+	comprobante_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Comprobantes,
+	empleado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Empleados,
 	caja_numero INT NOT NULL,
 	caja_sucursal_id INT NOT NULL,
-	FOREIGN KEY (caja_numero, caja_sucursal_id) REFERENCES EL_DROPEO.Caja(numero, sucursal_id)
+	FOREIGN KEY (caja_numero, caja_sucursal_id) REFERENCES EL_DROPEO.Cajas(numero, sucursal_id)
 )
 
 
-CREATE TABLE EL_DROPEO.Medio_De_Pago(
+CREATE TABLE EL_DROPEO.Medios_De_Pago(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL,
 	tipo_pago NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Detalle(
+CREATE TABLE EL_DROPEO.Detalles(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-	cliente_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Cliente,
+	cliente_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Clientes,
 	numero_tarjeta NVARCHAR(255),
 	vencimiento_tarjeta DATE,
 	cuotas INT
@@ -224,9 +232,10 @@ CREATE TABLE EL_DROPEO.Pagos(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	fecha DATETIME NOT NULL,
 	importe DECIMAL(18, 2) NOT NULL,
-	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
-	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medio_De_Pago,
-	detalle_id INT FOREIGN KEY REFERENCES EL_DROPEO.Detalle
+	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ventas,
+	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medios_De_Pago,
+	detalle_id INT FOREIGN KEY REFERENCES EL_DROPEO.Detalles
+    -- descuento_aplicado DECIMAL(18, 2)
 )
 
 CREATE TABLE EL_DROPEO.Descuentos(
@@ -236,50 +245,81 @@ CREATE TABLE EL_DROPEO.Descuentos(
 	fecha_fin DATETIME NOT NULL,
 	monto DECIMAL(18, 2) NOT NULL,
 	tope DECIMAL(18, 2) NOT NULL,
-	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medio_De_Pago
+	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medios_De_Pago
 )
 
-CREATE TABLE EL_DROPEO.Marca(
+CREATE TABLE EL_DROPEO.Descuentos_Pagos(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    descuento_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Descuentos,
+    pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Pagos,
+    descuento_aplicado DECIMAL(18, 2) NOT NULL
+)
+
+CREATE TABLE EL_DROPEO.Marcas(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Categoria(
+CREATE TABLE EL_DROPEO.Categorias(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Sub_Categoria(
+CREATE TABLE EL_DROPEO.Sub_Categorias(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-	categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Categoria,
+	categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Categorias,
 	nombre NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Producto(
+CREATE TABLE EL_DROPEO.Productos(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
 	descripcion NVARCHAR(255) NOT NULL,
 	precio DECIMAL(18, 2) NOT NULL,
-	marca_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Marca,
-	sub_categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sub_Categoria
+	marca_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Marcas,
+	sub_categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sub_Categorias
 )
 
-CREATE TABLE EL_DROPEO.Item(
-	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
-	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Producto,
+CREATE TABLE EL_DROPEO.Items(
+	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ventas,
+	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Productos,
 	cantidad INT NOT NULL,
-	precio_unitario DECIMAL(18, 2) NOT NULL,
-	PRIMARY KEY(venta_id, producto_id)
+	precio_unitario DECIMAL(18, 2) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Promocion(
+--INSERT INTO EL_DROPEO.Items (venta_id, producto_id, cantidad, precio_unitario)
+--SELECT DISTINCT
+--    V.id AS venta_id,
+--    P.id AS producto_id,
+--    TICKET_DET_CANTIDAD,
+--    TICKET_DET_PRECIO
+--FROM gd_esquema.Maestra
+--LEFT JOIN EL_DROPEO.Ventas V ON V.numero_ticket = TICKET_NUMERO
+--LEFT JOIN EL_DROPEO.Marcas M ON M.id = P.marca_id
+--LEFT JOIN (
+--    SELECT id, marca_id, sub_categoria_id, nombre
+--    FROM EL_DROPEO.Productos Product
+--    LEFT JOIN EL_DROPEO.Marcas M ON M.id = Product.marca_id
+--    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
+--) P ON PRODUCTO_NOMBRE = P.nombre AND PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
+--WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
+
+CREATE TABLE EL_DROPEO.Promociones(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL,
 	fecha_inicio DATETIME NOT NULL,
 	fecha_fin DATETIME NOT NULL,
 )
 
-CREATE TABLE EL_DROPEO.Regla(
+CREATE TABLE EL_DROPEO.Promociones_X_Items(
+    promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promociones,
+    item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Items,
+    promocion_aplicada_descuento DECIMAL(18, 2) NOT NULL,
+    PRIMARY KEY(promocion_id, item_id)
+)
+
+CREATE TABLE EL_DROPEO.Reglas(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL,
 	cantidad_aplicable_descuento DECIMAL(18, 2) NOT NULL,
@@ -287,38 +327,39 @@ CREATE TABLE EL_DROPEO.Regla(
 	cantidad_maxima INT NOT NULL,
 	misma_marca BIT NOT NULL,
 	mismo_producto BIT NOT NULL,
-	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion
+	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promociones
 )
 
-CREATE TABLE EL_DROPEO.Promocion_Producto(
-	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
-	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Producto,
+CREATE TABLE EL_DROPEO.Promociones_X_Productos(
+	promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promociones,
+	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Productos,
 	PRIMARY KEY(promocion_id, producto_id)
 )
 
-CREATE TABLE EL_DROPEO.Estado_Envio(
+CREATE TABLE EL_DROPEO.Estados_Envio(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Envio(
+CREATE TABLE EL_DROPEO.Envios(
 	costo DECIMAL(18, 2) NOT NULL,
 	fecha_programada DATETIME NOT NULL,
 	hora_inicio DECIMAL(18, 2) NOT NULL,
 	hora_fin DECIMAL(18, 2) NOT NULL,
 	fecha_entrega DATETIME,
-	estado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Estado_Envio,
-	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta
+	estado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Estados_Envio,
+	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ventas
     
 )
 
 END
 
 GO
+
 CREATE PROCEDURE EL_DROPEO.MIGRACION AS
 BEGIN
 
-INSERT INTO EL_DROPEO.Provincia (nombre)
+INSERT INTO EL_DROPEO.Provincias (nombre)
 SELECT nombre
 FROM (
     SELECT CLIENTE_PROVINCIA AS nombre FROM gd_esquema.Maestra
@@ -329,7 +370,7 @@ FROM (
 ) provincias
 WHERE nombre IS NOT NULL
 
-INSERT INTO EL_DROPEO.Localidad (nombre, provincia_id)
+INSERT INTO EL_DROPEO.Localidades (nombre, provincia_id)
 SELECT localidades.nombre, p.id
 FROM (
     SELECT CLIENTE_LOCALIDAD AS nombre, CLIENTE_PROVINCIA AS provincia FROM gd_esquema.Maestra WHERE CLIENTE_LOCALIDAD IS NOT NULL
@@ -338,9 +379,9 @@ FROM (
     UNION
     SELECT SUPER_LOCALIDAD AS nombre, SUPER_PROVINCIA AS provincia FROM gd_esquema.Maestra WHERE SUPER_LOCALIDAD IS NOT NULL
 ) localidades
-INNER JOIN EL_DROPEO.Provincia p ON localidades.provincia = p.nombre;
+INNER JOIN EL_DROPEO.Provincias p ON localidades.provincia = p.nombre;
 
-INSERT INTO EL_DROPEO.Ubicacion (calle, altura, localidad_id)
+INSERT INTO EL_DROPEO.Ubicaciones (calle, altura, localidad_id)
 SELECT 
     LEFT(direccion, LEN(direccion) - CHARINDEX(' ', REVERSE(direccion))) AS calle,
     CAST(RIGHT(direccion, CHARINDEX(' ', REVERSE(direccion)) - 1) AS INT) AS altura,
@@ -352,13 +393,13 @@ FROM (
     UNION
     SELECT SUPER_DOMICILIO AS direccion, SUPER_LOCALIDAD AS localidad FROM gd_esquema.Maestra WHERE SUPER_DOMICILIO IS NOT NULL
 ) direcciones
-INNER JOIN EL_DROPEO.Localidad l ON direcciones.localidad = l.nombre;
+INNER JOIN EL_DROPEO.Localidades l ON direcciones.localidad = l.nombre;
 
-INSERT INTO EL_DROPEO.Condicion_Fiscal (descripcion)
+INSERT INTO EL_DROPEO.Condiciones_Fiscales (descripcion)
 SELECT DISTINCT SUPER_CONDICION_FISCAL FROM gd_esquema.Maestra
 WHERE SUPER_CONDICION_FISCAL IS NOT NULL
 
-INSERT INTO EL_DROPEO.Supermercado (nombre, razon_social, cuit, iibb, ubicacion_id, fecha_inicio, condicion_fiscal_id)
+INSERT INTO EL_DROPEO.Supermercados (nombre, razon_social, cuit, iibb, ubicacion_id, fecha_inicio, condicion_fiscal_id)
 SELECT 
     SUPER_NOMBRE,
     SUPER_RAZON_SOC,
@@ -378,11 +419,11 @@ FROM (
         cf.id AS condicion_fiscal_id,
 		SUPER_DOMICILIO
     FROM gd_esquema.Maestra m
-    INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND m.SUPER_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
-    INNER JOIN EL_DROPEO.Condicion_Fiscal cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
+    INNER JOIN EL_DROPEO.Ubicaciones u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND m.SUPER_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
+    INNER JOIN EL_DROPEO.Condiciones_Fiscales cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
 ) as supermercados
 
-INSERT INTO EL_DROPEO.Sucursal (nombre, ubicacion_id, supermercado_id)
+INSERT INTO EL_DROPEO.Sucursales (nombre, ubicacion_id, supermercado_id)
 SELECT 
     sucursales.SUCURSAL_NOMBRE AS nombre,
     u.id AS ubicacion_id,
@@ -397,16 +438,16 @@ FROM (
     FROM gd_esquema.Maestra
     WHERE SUCURSAL_DIRECCION IS NOT NULL
 ) sucursales
-INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura) AND sucursales.localidad = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
-INNER JOIN EL_DROPEO.Localidad l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincia WHERE id = l.provincia_id)
-INNER JOIN EL_DROPEO.Supermercado s ON sucursales.SUPER_CUIT = s.cuit;
+INNER JOIN EL_DROPEO.Ubicaciones u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura) AND sucursales.localidad = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
+INNER JOIN EL_DROPEO.Localidades l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincias WHERE id = l.provincia_id)
+INNER JOIN EL_DROPEO.Supermercados s ON sucursales.SUPER_CUIT = s.cuit;
 
-INSERT INTO EL_DROPEO.Tipo_Caja (descripcion)
+INSERT INTO EL_DROPEO.Tipos_Caja (descripcion)
 SELECT DISTINCT SUBSTRING(CAJA_TIPO, CHARINDEX(' ', CAJA_TIPO, CHARINDEX(' ', CAJA_TIPO) + 1) + 1, LEN(CAJA_TIPO))
 FROM gd_esquema.Maestra
 WHERE CAJA_TIPO IS NOT NULL;
 
-INSERT INTO EL_DROPEO.Caja (numero, tipo_caja_id, sucursal_id)
+INSERT INTO EL_DROPEO.Cajas (numero, tipo_caja_id, sucursal_id)
 SELECT 
 	CAJA_NUMERO,
 	tc.id AS tipo_caja_id,
@@ -419,10 +460,10 @@ FROM (
     FROM gd_esquema.Maestra
     WHERE CAJA_TIPO IS NOT NULL
 ) cajas
-INNER JOIN EL_DROPEO.Sucursal s ON cajas.SUCURSAL_NOMBRE = s.nombre
-INNER JOIN EL_DROPEO.Tipo_Caja tc ON cajas.CAJA_TIPO LIKE '%' + tc.descripcion
+INNER JOIN EL_DROPEO.Sucursales s ON cajas.SUCURSAL_NOMBRE = s.nombre
+INNER JOIN EL_DROPEO.Tipos_Caja tc ON cajas.CAJA_TIPO LIKE '%' + tc.descripcion
 
-INSERT INTO EL_DROPEO.Empleado (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, sucursal_id)
+INSERT INTO EL_DROPEO.Empleados (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, sucursal_id)
 SELECT DISTINCT
     EMPLEADO_NOMBRE,
     EMPLEADO_APELLIDO,
@@ -433,10 +474,10 @@ SELECT DISTINCT
     EMPLEADO_FECHA_NACIMIENTO AS fecha_nacimiento,
     s.id AS sucursal_id
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Sucursal s ON SUCURSAL_NOMBRE = s.nombre
+INNER JOIN EL_DROPEO.Sucursales s ON SUCURSAL_NOMBRE = s.nombre
 WHERE EMPLEADO_NOMBRE IS NOT NULL
 
-INSERT INTO EL_DROPEO.Cliente (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, ubicacion_id)
+INSERT INTO EL_DROPEO.Clientes (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, ubicacion_id)
 SELECT
     CLIENTE_NOMBRE,
     CLIENTE_APELLIDO,
@@ -458,64 +499,64 @@ FROM (
         u.id AS ubicacion_id,
         ROW_NUMBER() OVER (PARTITION BY CLIENTE_DNI ORDER BY CLIENTE_FECHA_REGISTRO DESC) AS rn
     FROM gd_esquema.Maestra m
-    INNER JOIN EL_DROPEO.Ubicacion u ON CLIENTE_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND CLIENTE_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
+    INNER JOIN EL_DROPEO.Ubicaciones u ON CLIENTE_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND CLIENTE_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
 ) as clientes
 WHERE rn = 1
 
-INSERT INTO EL_DROPEO.Marca(nombre)
+INSERT INTO EL_DROPEO.Marcas(nombre)
 SELECT DISTINCT PRODUCTO_MARCA
 FROM gd_esquema.Maestra
 WHERE PRODUCTO_MARCA IS NOT NULL
 
-INSERT INTO EL_DROPEO.Categoria(nombre)
+INSERT INTO EL_DROPEO.Categorias(nombre)
 SELECT DISTINCT PRODUCTO_CATEGORIA
 FROM gd_esquema.Maestra
 WHERE PRODUCTO_CATEGORIA IS NOT NULL
 
-INSERT INTO EL_DROPEO.Sub_Categoria(nombre, categoria_id)
+INSERT INTO EL_DROPEO.Sub_Categorias(nombre, categoria_id)
 SELECT DISTINCT PRODUCTO_SUB_CATEGORIA, C.id
 FROM gd_esquema.Maestra
-LEFT JOIN EL_DROPEO.Categoria C ON C.nombre = PRODUCTO_CATEGORIA
+LEFT JOIN EL_DROPEO.Categorias C ON C.nombre = PRODUCTO_CATEGORIA
 WHERE PRODUCTO_CATEGORIA IS NOT NULL AND PRODUCTO_SUB_CATEGORIA IS NOT NULL
 
-INSERT INTO EL_DROPEO.Producto(nombre, descripcion, precio, marca_id, sub_categoria_id) --Typo
+INSERT INTO EL_DROPEO.Productos(nombre, descripcion, precio, marca_id, sub_categoria_id) --Typo
 SELECT DISTINCT PRODUCTO_NOMBRE, PRODUCTO_DESCRIPCION, PRODUCTO_PRECIO, M.id, cs.id
 FROM (
 	SELECT DISTINCT PRODUCTO_NOMBRE, PRODUCTO_DESCRIPCION, PRODUCTO_PRECIO, PRODUCTO_MARCA, PRODUCTO_SUB_CATEGORIA, PRODUCTO_CATEGORIA
 	FROM gd_esquema.Maestra) as productos
-LEFT JOIN EL_DROPEO.Marca M ON M.nombre = PRODUCTO_MARCA
+LEFT JOIN EL_DROPEO.Marcas M ON M.nombre = PRODUCTO_MARCA
 LEFT JOIN (
 	SELECT S.nombre as nombre_subcategoria, categoria_id, C.nombre as nombre_categoria, s.id 
-	FROM EL_DROPEO.Sub_Categoria S
-	LEFT JOIN EL_DROPEO.Categoria C ON categoria_id = C.id
+	FROM EL_DROPEO.Sub_Categorias S
+	LEFT JOIN EL_DROPEO.Categorias C ON categoria_id = C.id
 ) cs ON PRODUCTO_CATEGORIA = cs.nombre_categoria AND PRODUCTO_SUB_CATEGORIA = cs.nombre_subcategoria
 WHERE PRODUCTO_NOMBRE IS NOT NULL AND PRODUCTO_DESCRIPCION IS NOT NULL AND PRODUCTO_PRECIO IS NOT NULL
 
-SET IDENTITY_INSERT EL_DROPEO.Promocion ON
-INSERT INTO EL_DROPEO.Promocion(id, descripcion, fecha_inicio, fecha_fin)
+SET IDENTITY_INSERT EL_DROPEO.Promociones ON
+INSERT INTO EL_DROPEO.Promociones(id, descripcion, fecha_inicio, fecha_fin)
 SELECT DISTINCT PROMO_CODIGO, PROMOCION_DESCRIPCION, PROMOCION_FECHA_INICIO, PROMOCION_FECHA_FIN
 FROM gd_esquema.Maestra
 WHERE PROMO_CODIGO IS NOT NULL
-DBCC checkident ('EL_DROPEO.Promocion', reseed, 131)
-SET IDENTITY_INSERT EL_DROPEO.Promocion OFF
+DBCC checkident ('EL_DROPEO.Promociones', reseed, 131)
+SET IDENTITY_INSERT EL_DROPEO.Promociones OFF
 
-INSERT INTO EL_DROPEO.Regla(descripcion, cantidad_aplicable_descuento, cantidad_aplicable_regla, cantidad_maxima, misma_marca, mismo_producto, promocion_id)
+INSERT INTO EL_DROPEO.Reglas(descripcion, cantidad_aplicable_descuento, cantidad_aplicable_regla, cantidad_maxima, misma_marca, mismo_producto, promocion_id)
 SELECT DISTINCT REGLA_DESCRIPCION, REGLA_CANT_APLICA_DESCUENTO, REGLA_CANT_APLICABLE_REGLA, REGLA_CANT_MAX_PROD, REGLA_APLICA_MISMA_MARCA, REGLA_APLICA_MISMO_PROD, P.id
 FROM gd_esquema.Maestra
-LEFT JOIN EL_DROPEO.Promocion P on P.id = PROMO_CODIGO
+LEFT JOIN EL_DROPEO.Promociones P on P.id = PROMO_CODIGO
 WHERE REGLA_DESCRIPCION IS NOT NULL
 
-INSERT INTO EL_DROPEO.Promocion_Producto(producto_id, promocion_id)
+INSERT INTO EL_DROPEO.Promociones_X_Productos(producto_id, promocion_id)
 SELECT DISTINCT P.id, Promo.id
-FROM EL_DROPEO.Producto P
-LEFT JOIN EL_DROPEO.Marca M ON M.id = P.marca_id
-LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = P.sub_categoria_id
-LEFT JOIN EL_DROPEO.Categoria C ON C.id = S.categoria_id
+FROM EL_DROPEO.Productos P
+LEFT JOIN EL_DROPEO.Marcas M ON M.id = P.marca_id
+LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = P.sub_categoria_id
+LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
 LEFT JOIN gd_esquema.Maestra Maestra ON Maestra.PRODUCTO_NOMBRE = P.nombre AND Maestra.PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = s.nombre AND PRODUCTO_CATEGORIA = c.nombre
-INNER JOIN EL_DROPEO.Promocion Promo ON Maestra.PROMO_CODIGO = Promo.id
+LEFT JOIN EL_DROPEO.Promociones Promo ON Maestra.PROMO_CODIGO = Promo.id
 WHERE Maestra.PROMO_CODIGO IS NOT NULL AND Maestra.PRODUCTO_NOMBRE IS NOT NULL
 
-INSERT INTO EL_DROPEO.Medio_De_Pago(descripcion, tipo_pago)
+INSERT INTO EL_DROPEO.Medios_De_Pago(descripcion, tipo_pago)
 SELECT DISTINCT PAGO_MEDIO_PAGO, PAGO_TIPO_MEDIO_PAGO
 FROM gd_esquema.Maestra
 WHERE PAGO_MEDIO_PAGO IS NOT NULL AND PAGO_TIPO_MEDIO_PAGO IS NOT NULL
@@ -523,15 +564,15 @@ WHERE PAGO_MEDIO_PAGO IS NOT NULL AND PAGO_TIPO_MEDIO_PAGO IS NOT NULL
 INSERT INTO EL_DROPEO.Descuentos(codigo, descripcion, fecha_inicio, fecha_fin, monto, tope, medio_de_pago_id)
 SELECT DISTINCT DESCUENTO_CODIGO, DESCUENTO_DESCRIPCION, DESCUENTO_FECHA_INICIO, DESCUENTO_FECHA_FIN, DESCUENTO_PORCENTAJE_DESC, DESCUENTO_TOPE, M.id
 FROM gd_esquema.Maestra
-LEFT JOIN EL_DROPEO.Medio_De_Pago M ON M.descripcion = PAGO_MEDIO_PAGO AND M.tipo_pago = PAGO_TIPO_MEDIO_PAGO
+LEFT JOIN EL_DROPEO.Medios_De_Pago M ON M.descripcion = PAGO_MEDIO_PAGO AND M.tipo_pago = PAGO_TIPO_MEDIO_PAGO
 WHERE DESCUENTO_CODIGO IS NOT NULL
 
 
-INSERT INTO EL_DROPEO.Comprobante (tipo_comprobante)
+INSERT INTO EL_DROPEO.Comprobantes (tipo_comprobante)
 SELECT DISTINCT TICKET_TIPO_COMPROBANTE 
 FROM gd_esquema.Maestra;
 
-INSERT INTO EL_DROPEO.Venta (numero_ticket, fecha_hora, comprobante_id, empleado_id, caja_numero, caja_sucursal_id)
+INSERT INTO EL_DROPEO.Ventas (numero_ticket, fecha_hora, comprobante_id, empleado_id, caja_numero, caja_sucursal_id)
 SELECT DISTINCT
     TICKET_NUMERO,
     TICKET_FECHA_HORA,
@@ -540,32 +581,32 @@ SELECT DISTINCT
     cs.numero AS caja_numero,
     cs.id AS caja_sucursal_id
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Comprobante Co ON Co.tipo_comprobante = TICKET_TIPO_COMPROBANTE
-INNER JOIN EL_DROPEO.Empleado E ON E.dni = EMPLEADO_DNI
+INNER JOIN EL_DROPEO.Comprobantes Co ON Co.tipo_comprobante = TICKET_TIPO_COMPROBANTE
+INNER JOIN EL_DROPEO.Empleados E ON E.dni = EMPLEADO_DNI
 INNER JOIN (
-	SELECT DISTINCT caja.numero, sucursal.nombre, sucursal.id FROM EL_DROPEO.Caja
-	INNER JOIN EL_DROPEO.Sucursal sucursal ON sucursal.id = caja.sucursal_id
+	SELECT DISTINCT cajas.numero, sucursal.nombre, sucursal.id FROM EL_DROPEO.Cajas
+	INNER JOIN EL_DROPEO.Sucursales sucursal ON sucursal.id = cajas.sucursal_id
 ) cs ON cs.numero = CAJA_NUMERO AND cs.nombre = SUCURSAL_NOMBRE
 WHERE TICKET_FECHA_HORA IS NOT NULL AND TICKET_TIPO_COMPROBANTE IS NOT NULL AND EMPLEADO_DNI IS NOT NULL AND CAJA_NUMERO IS NOT NULL
 
-INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
-SELECT DISTINCT
-    C.id AS cliente_id,
-    PAGO_TARJETA_NRO,
-    PAGO_TARJETA_FECHA_VENC,
-    PAGO_TARJETA_CUOTAS
-FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
-WHERE PAGO_TARJETA_NRO IS NOT NULL AND PAGO_TARJETA_FECHA_VENC IS NOT NULL AND PAGO_TARJETA_CUOTAS IS NOT NULL
+--INSERT INTO EL_DROPEO.Detalles (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas) va este pero no inserta nada pq no hay pagos con tarjeta
+--SELECT DISTINCT
+--    C.id AS cliente_id,
+--    PAGO_TARJETA_NRO,
+--    PAGO_TARJETA_FECHA_VENC,
+--    PAGO_TARJETA_CUOTAS
+--FROM gd_esquema.Maestra
+--INNER JOIN EL_DROPEO.Clientes C ON C.dni = CLIENTE_DNI
+--WHERE PAGO_TARJETA_NRO IS NOT NULL AND PAGO_TARJETA_FECHA_VENC IS NOT NULL AND PAGO_TARJETA_CUOTAS IS NOT NULL
 
-INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
+INSERT INTO EL_DROPEO.Detalles (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
 SELECT DISTINCT
     C.id AS cliente_id,
     PAGO_TARJETA_NRO,
     PAGO_TARJETA_FECHA_VENC,
     PAGO_TARJETA_CUOTAS
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
+INNER JOIN EL_DROPEO.Clientes C ON C.dni = CLIENTE_DNI
 WHERE CLIENTE_DNI IS NOT NULL
 
 INSERT INTO EL_DROPEO.Pagos (fecha, medio_de_pago_id, detalle_id, importe, venta_id)
@@ -576,18 +617,18 @@ SELECT DISTINCT
     PAGO_IMPORTE,
     V.id AS venta_id
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Medio_De_Pago MP ON MP.descripcion = PAGO_MEDIO_PAGO
-LEFT JOIN EL_DROPEO.Detalle D ON D.numero_tarjeta = PAGO_TARJETA_NRO
-INNER JOIN EL_DROPEO.Sucursal S ON S.nombre = SUCURSAL_NOMBRE
-INNER JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO AND S.id = V.caja_sucursal_id
+INNER JOIN EL_DROPEO.Medios_De_Pago MP ON MP.descripcion = PAGO_MEDIO_PAGO
+LEFT JOIN EL_DROPEO.Detalles D ON D.numero_tarjeta = PAGO_TARJETA_NRO
+INNER JOIN EL_DROPEO.Sucursales S ON S.nombre = SUCURSAL_NOMBRE
+INNER JOIN EL_DROPEO.Ventas V ON V.numero_ticket = TICKET_NUMERO AND S.id = V.caja_sucursal_id
 WHERE PAGO_FECHA IS NOT NULL AND PAGO_MEDIO_PAGO IS NOT NULL AND PAGO_TARJETA_NRO IS NOT NULL AND PAGO_IMPORTE IS NOT NULL AND TICKET_FECHA_HORA IS NOT NULL
 
-INSERT INTO EL_DROPEO.Estado_Envio (descripcion)
+INSERT INTO EL_DROPEO.Estados_Envio (descripcion)
 SELECT DISTINCT ENVIO_ESTADO
 FROM gd_esquema.Maestra
 WHERE ENVIO_ESTADO IS NOT NULL	
 
-INSERT INTO EL_DROPEO.Envio (costo, fecha_programada, hora_inicio, hora_fin, fecha_entrega, estado_id, venta_id)
+INSERT INTO EL_DROPEO.Envios (costo, fecha_programada, hora_inicio, hora_fin, fecha_entrega, estado_id, venta_id)
 SELECT DISTINCT
     ENVIO_COSTO,
     ENVIO_FECHA_PROGRAMADA,
@@ -597,10 +638,65 @@ SELECT DISTINCT
     EE.id AS estado_id,
     V.id AS venta_id
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Estado_Envio EE ON EE.descripcion = ENVIO_ESTADO
-INNER JOIN EL_DROPEO.Sucursal S ON S.nombre = SUCURSAL_NOMBRE
-INNER JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO AND V.caja_sucursal_id = S.id
+INNER JOIN EL_DROPEO.Estados_Envio EE ON EE.descripcion = ENVIO_ESTADO
+INNER JOIN EL_DROPEO.Sucursales S ON S.nombre = SUCURSAL_NOMBRE
+INNER JOIN EL_DROPEO.Ventas V ON V.numero_ticket = TICKET_NUMERO AND V.caja_sucursal_id = S.id
 WHERE ENVIO_COSTO IS NOT NULL AND ENVIO_FECHA_PROGRAMADA IS NOT NULL AND ENVIO_HORA_INICIO IS NOT NULL AND ENVIO_HORA_FIN IS NOT NULL AND TICKET_NUMERO IS NOT NULL
+
+INSERT INTO EL_DROPEO.Descuentos_Pagos (descuento_id, pago_id, descuento_aplicado)
+SELECT DISTINCT
+    DESCUENTO_CODIGO,
+    P.id AS pago_id,
+	PAGO_DESCUENTO_APLICADO
+FROM gd_esquema.Maestra
+INNER JOIN EL_DROPEO.Ventas V ON V.numero_ticket = TICKET_NUMERO
+INNER JOIN EL_DROPEO.Pagos P ON P.venta_id = V.id
+WHERE DESCUENTO_CODIGO IS NOT NULL;
+
+INSERT INTO EL_DROPEO.Items (venta_id, producto_id, cantidad, precio_unitario)
+SELECT DISTINCT
+    V.venta_id,
+    P.product_id AS producto_id,
+    SUM(TICKET_DET_CANTIDAD) AS cantidad,
+    TICKET_DET_PRECIO
+FROM gd_esquema.Maestra M
+LEFT JOIN (
+    SELECT DISTINCT venta.id as venta_id, venta.numero_ticket, s.nombre as nombre_sucursal
+    FROM EL_DROPEO.Ventas venta
+    LEFT JOIN EL_DROPEO.Sucursales s ON s.id = venta.caja_sucursal_id
+) V ON V.numero_ticket = TICKET_NUMERO AND nombre_sucursal = SUCURSAL_NOMBRE
+LEFT JOIN (
+    SELECT distinct product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre, C.nombre as categoria_nombre
+    FROM EL_DROPEO.Productos Product
+    LEFT JOIN EL_DROPEO.Marcas M ON M.id = Product.marca_id
+    LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = Product.sub_categoria_id
+	LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
+) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre AND PRODUCTO_CATEGORIA =  P.categoria_nombre
+WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
+GROUP BY V.venta_id, P.product_id, TICKET_DET_PRECIO;
+
+INSERT INTO EL_DROPEO.Promociones_X_Items (promocion_id, item_id, promocion_aplicada_descuento)
+SELECT DISTINCT
+    M.PROMO_CODIGO,
+    I.id AS item_id,
+    SUM(M.PROMO_APLICADA_DESCUENTO)
+FROM gd_esquema.Maestra M
+LEFT JOIN (
+    SELECT DISTINCT venta.id as venta_id, venta.numero_ticket, s.nombre as nombre_sucursal
+    FROM EL_DROPEO.Ventas venta
+    LEFT JOIN EL_DROPEO.Sucursales s ON s.id = venta.caja_sucursal_id
+) V ON V.numero_ticket = TICKET_NUMERO AND nombre_sucursal = SUCURSAL_NOMBRE
+LEFT JOIN (
+    SELECT distinct product.id as product_id, marca_id, sub_categoria_id, product.nombre as producto_nombre, M.nombre as marca_nombre, S.nombre as subcategoria_nombre, C.nombre as categoria_nombre
+    FROM EL_DROPEO.Productos Product
+    LEFT JOIN EL_DROPEO.Marcas M ON M.id = Product.marca_id
+    LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = Product.sub_categoria_id
+	LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
+) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre AND PRODUCTO_CATEGORIA =  P.categoria_nombre
+LEFT JOIN EL_DROPEO.Items I on I.venta_id = V.venta_id and I.producto_id = P.product_id
+WHERE M.PROMO_CODIGO IS NOT NULL
+GROUP BY I.id, M.PROMO_CODIGO
+
 
 END
 GO
