@@ -97,8 +97,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Localidades') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Localidades
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Provincia') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Provincia
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Provincias') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Provincias
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Condiciones_Fiscales') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Condiciones_Fiscales
@@ -120,7 +120,7 @@ CREATE PROCEDURE EL_DROPEO.CREAR_TABLAS AS BEGIN
  Creación de tablas
 */
 
-CREATE TABLE EL_DROPEO.Provincia(
+CREATE TABLE EL_DROPEO.Provincias(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL
 )
@@ -128,7 +128,7 @@ CREATE TABLE EL_DROPEO.Provincia(
 CREATE TABLE EL_DROPEO.Localidades(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
-	provincia_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Provincia
+	provincia_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Provincias
 )
 
 CREATE TABLE EL_DROPEO.Ubicacion(
@@ -359,7 +359,7 @@ GO
 CREATE PROCEDURE EL_DROPEO.MIGRACION AS
 BEGIN
 
-INSERT INTO EL_DROPEO.Provincia (nombre)
+INSERT INTO EL_DROPEO.Provincias (nombre)
 SELECT nombre
 FROM (
     SELECT CLIENTE_PROVINCIA AS nombre FROM gd_esquema.Maestra
@@ -379,7 +379,7 @@ FROM (
     UNION
     SELECT SUPER_LOCALIDAD AS nombre, SUPER_PROVINCIA AS provincia FROM gd_esquema.Maestra WHERE SUPER_LOCALIDAD IS NOT NULL
 ) localidades
-INNER JOIN EL_DROPEO.Provincia p ON localidades.provincia = p.nombre;
+INNER JOIN EL_DROPEO.Provincias p ON localidades.provincia = p.nombre;
 
 INSERT INTO EL_DROPEO.Ubicacion (calle, altura, localidad_id)
 SELECT 
@@ -439,7 +439,7 @@ FROM (
     WHERE SUCURSAL_DIRECCION IS NOT NULL
 ) sucursales
 INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura) AND sucursales.localidad = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
-INNER JOIN EL_DROPEO.Localidades l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincia WHERE id = l.provincia_id)
+INNER JOIN EL_DROPEO.Localidades l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincias WHERE id = l.provincia_id)
 INNER JOIN EL_DROPEO.Supermercado s ON sucursales.SUPER_CUIT = s.cuit;
 
 INSERT INTO EL_DROPEO.Tipo_Caja (descripcion)
