@@ -26,8 +26,8 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Pro
 GO
 
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Item') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Item
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Items') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Items
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Promocion_Producto') AND type in (N'U'))
@@ -280,7 +280,7 @@ CREATE TABLE EL_DROPEO.Producto(
 	sub_categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Sub_Categorias
 )
 
-CREATE TABLE EL_DROPEO.Item(
+CREATE TABLE EL_DROPEO.Items(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
 	producto_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Producto,
@@ -288,7 +288,7 @@ CREATE TABLE EL_DROPEO.Item(
 	precio_unitario DECIMAL(18, 2) NOT NULL
 )
 
---INSERT INTO EL_DROPEO.Item (venta_id, producto_id, cantidad, precio_unitario)
+--INSERT INTO EL_DROPEO.Items (venta_id, producto_id, cantidad, precio_unitario)
 --SELECT DISTINCT
 --    V.id AS venta_id,
 --    P.id AS producto_id,
@@ -314,7 +314,7 @@ CREATE TABLE EL_DROPEO.Promocion(
 
 CREATE TABLE EL_DROPEO.Promocion_Item(
     promocion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Promocion,
-    item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Item,
+    item_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Items,
     promocion_aplicada_descuento DECIMAL(18, 2) NOT NULL,
     PRIMARY KEY(promocion_id, item_id)
 )
@@ -653,7 +653,7 @@ INNER JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO
 INNER JOIN EL_DROPEO.Pagos P ON P.venta_id = V.id
 WHERE DESCUENTO_CODIGO IS NOT NULL;
 
-INSERT INTO EL_DROPEO.Item (venta_id, producto_id, cantidad, precio_unitario)
+INSERT INTO EL_DROPEO.Items (venta_id, producto_id, cantidad, precio_unitario)
 SELECT DISTINCT
     V.venta_id,
     P.product_id AS producto_id,
@@ -693,7 +693,7 @@ LEFT JOIN (
     LEFT JOIN EL_DROPEO.Sub_Categorias S ON S.id = Product.sub_categoria_id
 	LEFT JOIN EL_DROPEO.Categorias C ON C.id = S.categoria_id
 ) P ON M.PRODUCTO_NOMBRE = P.producto_nombre AND PRODUCTO_MARCA = P.marca_nombre AND PRODUCTO_SUB_CATEGORIA = P.subcategoria_nombre AND PRODUCTO_CATEGORIA =  P.categoria_nombre
-LEFT JOIN EL_DROPEO.Item I on I.venta_id = V.venta_id and I.producto_id = P.product_id
+LEFT JOIN EL_DROPEO.Items I on I.venta_id = V.venta_id and I.producto_id = P.product_id
 WHERE M.PROMO_CODIGO IS NOT NULL
 GROUP BY I.id, M.PROMO_CODIGO
 
