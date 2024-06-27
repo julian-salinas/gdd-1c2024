@@ -76,8 +76,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Comprobante') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Comprobante
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cliente') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Cliente
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Clientes') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Clientes
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cajas') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Cajas
@@ -173,7 +173,7 @@ CREATE TABLE EL_DROPEO.Cajas(
 	PRIMARY KEY(numero, sucursal_id)
 )
 
-CREATE TABLE EL_DROPEO.Cliente(
+CREATE TABLE EL_DROPEO.Clientes(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,	
 	apellido NVARCHAR(255) NOT NULL,
@@ -222,7 +222,7 @@ CREATE TABLE EL_DROPEO.Medio_De_Pago(
 
 CREATE TABLE EL_DROPEO.Detalle(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-	cliente_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Cliente,
+	cliente_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Clientes,
 	numero_tarjeta NVARCHAR(255),
 	vencimiento_tarjeta DATE,
 	cuotas INT
@@ -477,7 +477,7 @@ FROM gd_esquema.Maestra
 INNER JOIN EL_DROPEO.Sucursal s ON SUCURSAL_NOMBRE = s.nombre
 WHERE EMPLEADO_NOMBRE IS NOT NULL
 
-INSERT INTO EL_DROPEO.Cliente (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, ubicacion_id)
+INSERT INTO EL_DROPEO.Clientes (nombre, apellido, dni, fecha_registro, telefono, mail, fecha_nacimiento, ubicacion_id)
 SELECT
     CLIENTE_NOMBRE,
     CLIENTE_APELLIDO,
@@ -596,7 +596,7 @@ WHERE TICKET_FECHA_HORA IS NOT NULL AND TICKET_TIPO_COMPROBANTE IS NOT NULL AND 
 --    PAGO_TARJETA_FECHA_VENC,
 --    PAGO_TARJETA_CUOTAS
 --FROM gd_esquema.Maestra
---INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
+--INNER JOIN EL_DROPEO.Clientes C ON C.dni = CLIENTE_DNI
 --WHERE PAGO_TARJETA_NRO IS NOT NULL AND PAGO_TARJETA_FECHA_VENC IS NOT NULL AND PAGO_TARJETA_CUOTAS IS NOT NULL
 
 INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
@@ -606,7 +606,7 @@ SELECT DISTINCT
     PAGO_TARJETA_FECHA_VENC,
     PAGO_TARJETA_CUOTAS
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Cliente C ON C.dni = CLIENTE_DNI
+INNER JOIN EL_DROPEO.Clientes C ON C.dni = CLIENTE_DNI
 WHERE CLIENTE_DNI IS NOT NULL
 
 INSERT INTO EL_DROPEO.Pagos (fecha, medio_de_pago_id, detalle_id, importe, venta_id)
