@@ -100,8 +100,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Provincia') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Provincia
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Condicion_Fiscal') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Condicion_Fiscal
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Condiciones_Fiscales') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Condiciones_Fiscales
 GO
 
 IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'EL_DROPEO')
@@ -138,7 +138,7 @@ CREATE TABLE EL_DROPEO.Ubicacion(
 	localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Localidad
 )
 
-CREATE TABLE EL_DROPEO.Condicion_Fiscal(
+CREATE TABLE EL_DROPEO.Condiciones_Fiscales(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL
 )
@@ -151,7 +151,7 @@ CREATE TABLE EL_DROPEO.Supermercado(
 	iibb INT NOT NULL,
 	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicacion,
 	fecha_inicio DATETIME NOT NULL,
-	condicion_fiscal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Condicion_Fiscal
+	condicion_fiscal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Condiciones_Fiscales
 )
 
 CREATE TABLE EL_DROPEO.Sucursal(
@@ -395,7 +395,7 @@ FROM (
 ) direcciones
 INNER JOIN EL_DROPEO.Localidad l ON direcciones.localidad = l.nombre;
 
-INSERT INTO EL_DROPEO.Condicion_Fiscal (descripcion)
+INSERT INTO EL_DROPEO.Condiciones_Fiscales (descripcion)
 SELECT DISTINCT SUPER_CONDICION_FISCAL FROM gd_esquema.Maestra
 WHERE SUPER_CONDICION_FISCAL IS NOT NULL
 
@@ -420,7 +420,7 @@ FROM (
 		SUPER_DOMICILIO
     FROM gd_esquema.Maestra m
     INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND m.SUPER_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
-    INNER JOIN EL_DROPEO.Condicion_Fiscal cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
+    INNER JOIN EL_DROPEO.Condiciones_Fiscales cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
 ) as supermercados
 
 INSERT INTO EL_DROPEO.Sucursal (nombre, ubicacion_id, supermercado_id)
