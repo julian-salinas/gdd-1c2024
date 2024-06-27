@@ -61,8 +61,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Pagos') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Pagos
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Detalle') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Detalle
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Detalles') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Detalles
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Medio_De_Pago') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Medio_De_Pago
@@ -220,7 +220,7 @@ CREATE TABLE EL_DROPEO.Medio_De_Pago(
 	tipo_pago NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Detalle(
+CREATE TABLE EL_DROPEO.Detalles(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	cliente_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Clientes,
 	numero_tarjeta NVARCHAR(255),
@@ -234,7 +234,7 @@ CREATE TABLE EL_DROPEO.Pagos(
 	importe DECIMAL(18, 2) NOT NULL,
 	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Venta,
 	medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Medio_De_Pago,
-	detalle_id INT FOREIGN KEY REFERENCES EL_DROPEO.Detalle
+	detalle_id INT FOREIGN KEY REFERENCES EL_DROPEO.Detalles
     -- descuento_aplicado DECIMAL(18, 2)
 )
 
@@ -589,7 +589,7 @@ INNER JOIN (
 ) cs ON cs.numero = CAJA_NUMERO AND cs.nombre = SUCURSAL_NOMBRE
 WHERE TICKET_FECHA_HORA IS NOT NULL AND TICKET_TIPO_COMPROBANTE IS NOT NULL AND EMPLEADO_DNI IS NOT NULL AND CAJA_NUMERO IS NOT NULL
 
---INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas) va este pero no inserta nada pq no hay pagos con tarjeta
+--INSERT INTO EL_DROPEO.Detalles (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas) va este pero no inserta nada pq no hay pagos con tarjeta
 --SELECT DISTINCT
 --    C.id AS cliente_id,
 --    PAGO_TARJETA_NRO,
@@ -599,7 +599,7 @@ WHERE TICKET_FECHA_HORA IS NOT NULL AND TICKET_TIPO_COMPROBANTE IS NOT NULL AND 
 --INNER JOIN EL_DROPEO.Clientes C ON C.dni = CLIENTE_DNI
 --WHERE PAGO_TARJETA_NRO IS NOT NULL AND PAGO_TARJETA_FECHA_VENC IS NOT NULL AND PAGO_TARJETA_CUOTAS IS NOT NULL
 
-INSERT INTO EL_DROPEO.Detalle (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
+INSERT INTO EL_DROPEO.Detalles (cliente_id, numero_tarjeta, vencimiento_tarjeta, cuotas)
 SELECT DISTINCT
     C.id AS cliente_id,
     PAGO_TARJETA_NRO,
@@ -618,7 +618,7 @@ SELECT DISTINCT
     V.id AS venta_id
 FROM gd_esquema.Maestra
 INNER JOIN EL_DROPEO.Medio_De_Pago MP ON MP.descripcion = PAGO_MEDIO_PAGO
-LEFT JOIN EL_DROPEO.Detalle D ON D.numero_tarjeta = PAGO_TARJETA_NRO
+LEFT JOIN EL_DROPEO.Detalles D ON D.numero_tarjeta = PAGO_TARJETA_NRO
 INNER JOIN EL_DROPEO.Sucursal S ON S.nombre = SUCURSAL_NOMBRE
 INNER JOIN EL_DROPEO.Venta V ON V.numero_ticket = TICKET_NUMERO AND S.id = V.caja_sucursal_id
 WHERE PAGO_FECHA IS NOT NULL AND PAGO_MEDIO_PAGO IS NOT NULL AND PAGO_TARJETA_NRO IS NOT NULL AND PAGO_IMPORTE IS NOT NULL AND TICKET_FECHA_HORA IS NOT NULL
