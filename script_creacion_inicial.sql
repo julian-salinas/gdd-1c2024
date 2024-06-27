@@ -94,8 +94,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ubicacion') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Ubicacion
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Localidad') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Localidad
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Localidades') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Localidades
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Provincia') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Provincia
@@ -125,7 +125,7 @@ CREATE TABLE EL_DROPEO.Provincia(
 	nombre NVARCHAR(255) NOT NULL
 )
 
-CREATE TABLE EL_DROPEO.Localidad(
+CREATE TABLE EL_DROPEO.Localidades(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	nombre NVARCHAR(255) NOT NULL,
 	provincia_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Provincia
@@ -135,7 +135,7 @@ CREATE TABLE EL_DROPEO.Ubicacion(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	calle NVARCHAR(255) NOT NULL,
 	altura INT NOT NULL,
-	localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Localidad
+	localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Localidades
 )
 
 CREATE TABLE EL_DROPEO.Condiciones_Fiscales(
@@ -370,7 +370,7 @@ FROM (
 ) provincias
 WHERE nombre IS NOT NULL
 
-INSERT INTO EL_DROPEO.Localidad (nombre, provincia_id)
+INSERT INTO EL_DROPEO.Localidades (nombre, provincia_id)
 SELECT localidades.nombre, p.id
 FROM (
     SELECT CLIENTE_LOCALIDAD AS nombre, CLIENTE_PROVINCIA AS provincia FROM gd_esquema.Maestra WHERE CLIENTE_LOCALIDAD IS NOT NULL
@@ -393,7 +393,7 @@ FROM (
     UNION
     SELECT SUPER_DOMICILIO AS direccion, SUPER_LOCALIDAD AS localidad FROM gd_esquema.Maestra WHERE SUPER_DOMICILIO IS NOT NULL
 ) direcciones
-INNER JOIN EL_DROPEO.Localidad l ON direcciones.localidad = l.nombre;
+INNER JOIN EL_DROPEO.Localidades l ON direcciones.localidad = l.nombre;
 
 INSERT INTO EL_DROPEO.Condiciones_Fiscales (descripcion)
 SELECT DISTINCT SUPER_CONDICION_FISCAL FROM gd_esquema.Maestra
@@ -419,7 +419,7 @@ FROM (
         cf.id AS condicion_fiscal_id,
 		SUPER_DOMICILIO
     FROM gd_esquema.Maestra m
-    INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND m.SUPER_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
+    INNER JOIN EL_DROPEO.Ubicacion u ON m.SUPER_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND m.SUPER_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
     INNER JOIN EL_DROPEO.Condiciones_Fiscales cf ON m.SUPER_CONDICION_FISCAL = cf.descripcion
 ) as supermercados
 
@@ -438,8 +438,8 @@ FROM (
     FROM gd_esquema.Maestra
     WHERE SUCURSAL_DIRECCION IS NOT NULL
 ) sucursales
-INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura) AND sucursales.localidad = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
-INNER JOIN EL_DROPEO.Localidad l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincia WHERE id = l.provincia_id)
+INNER JOIN EL_DROPEO.Ubicacion u ON sucursales.direccion = CONCAT(u.calle, ' ', u.altura) AND sucursales.localidad = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
+INNER JOIN EL_DROPEO.Localidades l ON sucursales.localidad = l.nombre AND sucursales.provincia = (SELECT nombre FROM EL_DROPEO.Provincia WHERE id = l.provincia_id)
 INNER JOIN EL_DROPEO.Supermercado s ON sucursales.SUPER_CUIT = s.cuit;
 
 INSERT INTO EL_DROPEO.Tipo_Caja (descripcion)
@@ -499,7 +499,7 @@ FROM (
         u.id AS ubicacion_id,
         ROW_NUMBER() OVER (PARTITION BY CLIENTE_DNI ORDER BY CLIENTE_FECHA_REGISTRO DESC) AS rn
     FROM gd_esquema.Maestra m
-    INNER JOIN EL_DROPEO.Ubicacion u ON CLIENTE_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND CLIENTE_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidad WHERE id = u.localidad_id)
+    INNER JOIN EL_DROPEO.Ubicacion u ON CLIENTE_DOMICILIO = CONCAT(u.calle, ' ', u.altura) AND CLIENTE_LOCALIDAD = (SELECT nombre FROM EL_DROPEO.Localidades WHERE id = u.localidad_id)
 ) as clientes
 WHERE rn = 1
 
