@@ -73,8 +73,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Empleado') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Empleado
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Comprobante') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Comprobante
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Comprobantes') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Comprobantes
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Clientes') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Clientes
@@ -185,7 +185,7 @@ CREATE TABLE EL_DROPEO.Clientes(
 	ubicacion_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ubicacion
 )
 
-CREATE TABLE EL_DROPEO.Comprobante(
+CREATE TABLE EL_DROPEO.Comprobantes(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	tipo_comprobante NVARCHAR(255) NOT NULL,
 )
@@ -206,7 +206,7 @@ CREATE TABLE EL_DROPEO.Venta(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	numero_ticket INT NOT NULL,
 	fecha_hora DATETIME NOT NULL,
-	comprobante_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Comprobante,
+	comprobante_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Comprobantes,
 	empleado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Empleado,
 	caja_numero INT NOT NULL,
 	caja_sucursal_id INT NOT NULL,
@@ -568,7 +568,7 @@ LEFT JOIN EL_DROPEO.Medio_De_Pago M ON M.descripcion = PAGO_MEDIO_PAGO AND M.tip
 WHERE DESCUENTO_CODIGO IS NOT NULL
 
 
-INSERT INTO EL_DROPEO.Comprobante (tipo_comprobante)
+INSERT INTO EL_DROPEO.Comprobantes (tipo_comprobante)
 SELECT DISTINCT TICKET_TIPO_COMPROBANTE 
 FROM gd_esquema.Maestra;
 
@@ -581,7 +581,7 @@ SELECT DISTINCT
     cs.numero AS caja_numero,
     cs.id AS caja_sucursal_id
 FROM gd_esquema.Maestra
-INNER JOIN EL_DROPEO.Comprobante Co ON Co.tipo_comprobante = TICKET_TIPO_COMPROBANTE
+INNER JOIN EL_DROPEO.Comprobantes Co ON Co.tipo_comprobante = TICKET_TIPO_COMPROBANTE
 INNER JOIN EL_DROPEO.Empleado E ON E.dni = EMPLEADO_DNI
 INNER JOIN (
 	SELECT DISTINCT cajas.numero, sucursal.nombre, sucursal.id FROM EL_DROPEO.Cajas
