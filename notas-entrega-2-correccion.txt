@@ -1,0 +1,5 @@
+- Se agrego la tabla Envio
+- Se agrego la tabla Estado_Envio
+- Se agrego la tabla Descuentos_Pagos
+- Se agrego la tabla Promocion_Items
+- Se agrego descuento_aplicado
