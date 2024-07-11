@@ -731,7 +731,7 @@ RETURNS INT
 AS
 BEGIN
     DECLARE @venta_id INT
-    SELECT @venta_id = EL_DROPEO.Buscar_Venta(@TICKET_NUMERO, 'Sucursal N°:0');
+    SELECT @venta_id = EL_DROPEO.Buscar_Venta(@TICKET_NUMERO, @SUCURSAL_NOMBRE);
     DECLARE @pago_id INT
     SELECT @pago_id = P.id
     FROM EL_DROPEO.Pagos P
