@@ -299,23 +299,6 @@ CREATE TABLE EL_DROPEO.Items(
 	precio_unitario DECIMAL(18, 2) NOT NULL
 )
 
---INSERT INTO EL_DROPEO.Items (venta_id, producto_id, cantidad, precio_unitario)
---SELECT DISTINCT
---    V.id AS venta_id,
---    P.id AS producto_id,
---    TICKET_DET_CANTIDAD,
---    TICKET_DET_PRECIO
---FROM gd_esquema.Maestra
---LEFT JOIN EL_DROPEO.Ventas V ON V.numero_ticket = TICKET_NUMERO
---LEFT JOIN EL_DROPEO.Marcas M ON M.id = P.marca_id
---LEFT JOIN (
---    SELECT id, marca_id, sub_categoria_id, nombre
---    FROM EL_DROPEO.Productos Product
---    LEFT JOIN EL_DROPEO.Marcas M ON M.id = Product.marca_id
---    LEFT JOIN EL_DROPEO.Sub_Categoria S ON S.id = Product.sub_categoria_id
---) P ON PRODUCTO_NOMBRE = P.nombre AND PRODUCTO_MARCA = M.nombre AND PRODUCTO_SUB_CATEGORIA = S.nombre
---WHERE TICKET_DET_CANTIDAD IS NOT NULL AND TICKET_DET_PRECIO IS NOT NULL
-
 CREATE TABLE EL_DROPEO.Reglas(
 	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	descripcion NVARCHAR(255) NOT NULL,
