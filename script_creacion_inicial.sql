@@ -58,11 +58,11 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Descuentos') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Descuentos
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Pagos') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.Pagos
-GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Detalles') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Detalles
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Pagos') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.Pagos
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Medios_De_Pago') AND type in (N'U'))
     DROP TABLE EL_DROPEO.Medios_De_Pago
