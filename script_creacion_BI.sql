@@ -5,17 +5,36 @@ GO
 /* Drops */
 ----------
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Rango_Etario') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Obtener_Rango_Etario
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Tiempo') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Obtener_Tiempo
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cumplio_Entrega_Estimada') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Cumplio_Entrega_Estimada
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
+    DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Migrar_Fechas') AND type in (N'P', N'PC'))
+    DROP PROCEDURE EL_DROPEO.Migrar_Fechas
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Envios') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Hechos_Envios
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Promociones') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.BI_Hechos_Promociones
-
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Pagos') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Hechos_Pagos
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Cumplimiento_Envio') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.BI_Cumplimiento_Envio
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Promociones') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Hechos_Promociones
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Rango_Etario') AND type in (N'U'))
@@ -56,26 +75,6 @@ GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Tipo_Caja') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Tipo_Caja
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Rango_Etario') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
-    DROP FUNCTION EL_DROPEO.Obtener_Rango_Etario
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Tiempo') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
-    DROP FUNCTION EL_DROPEO.Obtener_Tiempo
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cumplio_Entrega_Estimada') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
-    DROP FUNCTION EL_DROPEO.Cumplio_Entrega_Estimada
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
-    DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Migrar_Fechas') AND type in (N'P', N'PC'))
-    DROP PROCEDURE EL_DROPEO.Migrar_Fechas
 GO
 
 ------------------------------
@@ -181,10 +180,6 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Pagos
 ------------------------------
 /* Migracion de dimensiones */
 ------------------------------
-
--- Popular tabla de cumplimiento de envio
-INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (0);
-INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (1);
 
 -- Popular tabla de rango etario
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
@@ -397,7 +392,7 @@ INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (16, 20);
 
 -- Migrar tipos de caja
 INSERT INTO EL_DROPEO.BI_Tipo_Caja (nombre)
-SELECT nombre FROM EL_DROPEO.Tipos_Caja;
+SELECT descripcion FROM EL_DROPEO.Tipos_Caja;
 
 -------------------------
 /* Migracion de hechos */
