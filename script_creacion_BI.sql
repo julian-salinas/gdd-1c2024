@@ -431,19 +431,19 @@ WHERE promocion_aplicada_descuento > 0
 INSERT INTO EL_DROPEO.BI_Hechos_Pagos (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id, descuento_aplicado, importe)
 SELECT 
     s.id as sucursal_id,
-    m.id as medio_de_pago_id,
+    mp.id as medio_de_pago_id,
     EL_DROPEO.Obtener_Tiempo(p.fecha) as tiempo_id,
-    c.id as cuotas_id,
+    cuota.id as cuotas_id,
     EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
     dp.descuento_aplicado,
     p.importe
 FROM EL_DROPEO.Pagos p
 JOIN EL_DROPEO.Medios_De_Pago m ON m.id = p.medio_de_pago_id
 JOIN EL_DROPEO.Detalles d ON p.id = d.pago_id
+JOIN EL_DROPEO.BI_Cuotas cuota ON cuota.cantidad = d.cuotas
 JOIN EL_DROPEO.Ventas v on v.id = p.venta_id
-JOIN EL_DROPEO.Cajas caja on caja.id = v.caja_id
+JOIN EL_DROPEO.Cajas caja on caja.numero = v.caja_numero and caja.sucursal_id = v.caja_sucursal_id
 JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
 JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
-JOIN EL_DROPEO.Descuentos_X_Pagos dp ON dp.pago_id = p.id
-JOIN EL_DROPEO.Descuentos d ON d.id = dp.descuento_id
+JOIN EL_DROPEO.Descuentos_Pagos dp ON dp.pago_id = p.id
 JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.tipo_pago 
