@@ -71,30 +71,6 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Envios
     costo_envio DECIMAL(18,2) NOT NULL,
 )
 
-------------------------------
-/* Migracion de dimensiones */
-------------------------------
-
--- Popular tabla de cumplimiento de envio
-INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (0);
-INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (1);
-
--- Popular tabla de rango etario
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (55, 200);
-
--- Popular tabla de localidades
-INSERT INTO EL_DROPEO.BI_Localidad (nombre)
-SELECT DISTINCT nombre as nombre_localidad
-FROM EL_DROPEO.Localidades;
-
--------------------------
-/* Migracion de hechos */
--------------------------
-
-
 ---------------
 /* Funciones */
 ---------------
@@ -122,9 +98,8 @@ GO
 /* Procedures */
 ----------------
 GO
-CREATE PROCEDURE EL_DROPEO.Obtener_O_Crear_Tiempo
-    @fecha DATETIME,
-    @tiempo_id INT OUTPUT
+CREATE PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
+    @fecha DATETIME
 AS
 BEGIN
     DECLARE @anio INT;
@@ -143,6 +118,7 @@ BEGIN
     ELSE
         SET @cuatrimestre = 4;
 
+    DECLARE @tiempo_id INT;
     SELECT @tiempo_id = id
     FROM EL_DROPEO.BI_Tiempo
     WHERE anio = @anio AND cuatrimestre = @cuatrimestre AND mes = @mes;
@@ -155,3 +131,54 @@ BEGIN
         SELECT @tiempo_id = SCOPE_IDENTITY();
     END
 END
+
+GO
+CREATE PROCEDURE EL_DROPEO.Migrar_Fechas
+    @tabla NVARCHAR(128),
+    @columna NVARCHAR(128)
+AS
+BEGIN
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @fecha_entrega DATETIME;
+
+    SET @sql = 'DECLARE cursorEnvios CURSOR FOR SELECT ' + @columna + ' FROM EL_DROPEO.' + @tabla + ';';
+    EXEC sp_executesql @sql;
+    OPEN cursorEnvios;
+    FETCH NEXT FROM cursorEnvios INTO @fecha_entrega;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        EXEC EL_DROPEO.Crear_Tiempo_Si_No_Existe @fecha_entrega;
+
+        FETCH NEXT FROM cursorEnvios INTO @fecha_entrega;
+    END
+
+    CLOSE cursorEnvios;
+    DEALLOCATE cursorEnvios;
+END
+
+------------------------------
+/* Migracion de dimensiones */
+------------------------------
+
+-- Popular tabla de cumplimiento de envio
+INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (0);
+INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (1);
+
+-- Popular tabla de rango etario
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (55, 200);
+
+-- Popular tabla de localidades
+INSERT INTO EL_DROPEO.BI_Localidad (nombre)
+SELECT DISTINCT nombre as nombre_localidad
+FROM EL_DROPEO.Localidades;
+
+-- Migrar tiempo de envios
+EXEC EL_DROPEO.Migrar_Fechas 'Envios', 'fecha_entrega';
+
+-------------------------
+/* Migracion de hechos */
+-------------------------
