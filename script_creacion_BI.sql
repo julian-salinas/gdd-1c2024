@@ -4,8 +4,8 @@ GO
 ----------
 /* Drops */
 ----------
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Cumplimiento_Envio') AND type in (N'U'))
-    DROP TABLE EL_DROPEO.BI_Cumplimiento_Envio
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Envios') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Hechos_Envios
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Rango_Etario') AND type in (N'U'))
@@ -24,18 +24,25 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obt
     DROP FUNCTION EL_DROPEO.Obtener_Rango_Etario
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_O_Crear_Tiempo') AND type in (N'P', N'PC'))
-    DROP PROCEDURE EL_DROPEO.Obtener_O_Crear_Tiempo
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Tiempo') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Obtener_Tiempo
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cumplio_Entrega_Estimada') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Cumplio_Entrega_Estimada
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
+    DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Migrar_Fechas') AND type in (N'P', N'PC'))
+    DROP PROCEDURE EL_DROPEO.Migrar_Fechas
 GO
 
 ------------------------------
 /* Creacion de dimensiones */
 ------------------------------
-
-CREATE TABLE EL_DROPEO.BI_Cumplimiento_Envio(
-	id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-    cumplio BIT NOT NULL
-)
 
 CREATE TABLE EL_DROPEO.BI_Rango_Etario
 (
@@ -67,7 +74,7 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Envios
     tiempo_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tiempo(id),
     localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Localidad(id),
     cliente_re_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
-    cumplimiento_envio_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Cumplimiento_Envio(id),
+    cumplio_envio BIT NOT NULL,
     costo_envio DECIMAL(18,2) NOT NULL,
 )
 
@@ -93,6 +100,61 @@ BEGIN
 END
 
 GO
+CREATE FUNCTION EL_DROPEO.Obtener_Tiempo (@fecha DATETIME)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @anio INT;
+    DECLARE @cuatrimestre INT;
+    DECLARE @mes INT;
+
+    SET @anio = YEAR(@fecha);
+    SET @mes = MONTH(@fecha);
+
+    IF @mes BETWEEN 1 AND 3
+        SET @cuatrimestre = 1;
+    ELSE IF @mes BETWEEN 4 AND 6
+        SET @cuatrimestre = 2;
+    ELSE IF @mes BETWEEN 7 AND 9
+        SET @cuatrimestre = 3;
+    ELSE
+        SET @cuatrimestre = 4;
+
+    DECLARE @tiempo_id INT;
+    SELECT @tiempo_id = id
+    FROM EL_DROPEO.BI_Tiempo
+    WHERE anio = @anio AND cuatrimestre = @cuatrimestre AND mes = @mes;
+
+    RETURN @tiempo_id;
+END
+
+GO
+CREATE FUNCTION EL_DROPEO.Cumplio_Entrega_Estimada (
+    @fecha_programada DATETIME,
+    @fecha_entrega DATETIME,
+    @hora_inicio INT,
+    @hora_fin INT
+)
+RETURNS BIT
+AS
+BEGIN
+    DECLARE @cumplio BIT;
+    DECLARE @hora_entrega INT;
+
+    SET @hora_entrega = DATEPART(HOUR, @fecha_entrega);
+
+    IF (CAST(@fecha_entrega AS DATE) <= CAST(@fecha_programada AS DATE) AND 
+        @hora_entrega BETWEEN @hora_inicio AND @hora_fin)
+    BEGIN
+        SET @cumplio = 1;
+    END
+    ELSE
+    BEGIN
+        SET @cumplio = 0;
+    END
+
+    RETURN @cumplio;
+END
 
 ----------------
 /* Procedures */
@@ -161,15 +223,11 @@ END
 /* Migracion de dimensiones */
 ------------------------------
 
--- Popular tabla de cumplimiento de envio
-INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (0);
-INSERT INTO EL_DROPEO.BI_Cumplimiento_Envio(cumplio) VALUES (1);
-
 -- Popular tabla de rango etario
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (55, 200);
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (50, 200);
 
 -- Popular tabla de localidades
 INSERT INTO EL_DROPEO.BI_Localidad (nombre)
@@ -182,3 +240,16 @@ EXEC EL_DROPEO.Migrar_Fechas 'Envios', 'fecha_entrega';
 -------------------------
 /* Migracion de hechos */
 -------------------------
+INSERT INTO EL_DROPEO.BI_Hechos_Envios (tiempo_id, localidad_id, cliente_re_id, cumplio_envio, costo_envio)
+SELECT
+    EL_DROPEO.Obtener_Tiempo(e.fecha_entrega) as tiempo_id,
+    l.id as localidad_id,
+    EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
+    EL_DROPEO.Cumplio_Entrega_Estimada(e.fecha_programada, e.fecha_entrega, e.hora_inicio, e.hora_fin) as cumplio_envio,
+    e.costo
+FROM EL_DROPEO.Envios e
+INNER JOIN EL_DROPEO.Ventas v ON e.venta_id = v.id
+INNER JOIN EL_DROPEO.Sucursales s ON v.caja_sucursal_id = s.id
+INNER JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
+INNER JOIN EL_DROPEO.Ubicaciones u ON u.id = s.ubicacion_id
+INNER JOIN EL_DROPEO.Localidades l ON l.id = u.localidad_id
