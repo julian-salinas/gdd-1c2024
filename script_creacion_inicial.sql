@@ -338,8 +338,8 @@ CREATE TABLE EL_DROPEO.Estados_Envio(
 CREATE TABLE EL_DROPEO.Envios(
 	costo DECIMAL(18, 2) NOT NULL,
 	fecha_programada DATETIME NOT NULL,
-	hora_inicio DECIMAL(18, 2) NOT NULL,
-	hora_fin DECIMAL(18, 2) NOT NULL,
+	hora_inicio INT NOT NULL,
+	hora_fin INT NOT NULL,
 	fecha_entrega DATETIME,
 	estado_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Estados_Envio,
 	venta_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.Ventas
@@ -603,7 +603,7 @@ SELECT
     PAGO_TARJETA_CUOTAS,
 	P.id as pago_id
 FROM gd_esquema.Maestra M
-LEFT JOIN EL_DROPEO.Clientes C ON C.dni = EL_DROPEO.Buscar_Cliente(M.TICKET_NUMERO)
+LEFT JOIN EL_DROPEO.Clientes C ON C.dni = EL_DROPEO.Buscar_Cliente(M.TICKET_NUMERO, M.SUCURSAL_NOMBRE)
 INNER JOIN EL_DROPEO.Pagos P ON P.id = EL_DROPEO.Buscar_Pago(PAGO_FECHA, PAGO_MEDIO_PAGO, PAGO_IMPORTE, TICKET_NUMERO, SUCURSAL_NOMBRE)
 WHERE (PAGO_TIPO_MEDIO_PAGO = 'Tarjeta Crèdito'
   OR PAGO_TIPO_MEDIO_PAGO = 'Tarjeta Debito')
@@ -691,7 +691,7 @@ END
 GO
 
 GO
-CREATE FUNCTION EL_DROPEO.Buscar_Cliente (@ticket_numero INT)
+CREATE FUNCTION EL_DROPEO.Buscar_Cliente (@ticket_numero INT, @sucursal_nombre NVARCHAR(55))
 RETURNS INT
 AS
 BEGIN
@@ -699,7 +699,7 @@ BEGIN
 
     SELECT @dni = CLIENTE_DNI 
     FROM gd_esquema.Maestra 
-    WHERE TICKET_NUMERO = @ticket_numero AND CLIENTE_DNI IS NOT NULL;
+    WHERE TICKET_NUMERO = @ticket_numero AND SUCURSAL_NOMBRE = @sucursal_nombre AND CLIENTE_DNI IS NOT NULL;
 
     RETURN @dni;
 END;
