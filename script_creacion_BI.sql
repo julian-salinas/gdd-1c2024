@@ -339,20 +339,20 @@ BEGIN
     DECLARE @sql NVARCHAR(MAX);
     DECLARE @fecha_entrega DATETIME;
 
-    SET @sql = 'DECLARE cursorEnvios CURSOR FOR SELECT ' + @columna + ' FROM EL_DROPEO.' + @tabla + ';';
+    SET @sql = 'DECLARE cursorTabla CURSOR FOR SELECT ' + @columna + ' FROM EL_DROPEO.' + @tabla + ';';
     EXEC sp_executesql @sql;
-    OPEN cursorEnvios;
-    FETCH NEXT FROM cursorEnvios INTO @fecha_entrega;
+    OPEN cursorTabla;
+    FETCH NEXT FROM cursorTabla INTO @fecha_entrega;
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
         EXEC EL_DROPEO.Crear_Tiempo_Si_No_Existe @fecha_entrega;
 
-        FETCH NEXT FROM cursorEnvios INTO @fecha_entrega;
+        FETCH NEXT FROM cursorTabla INTO @fecha_entrega;
     END
 
-    CLOSE cursorEnvios;
-    DEALLOCATE cursorEnvios;
+    CLOSE cursorTabla;
+    DEALLOCATE cursorTabla;
 END
 
 ------------------------------
@@ -375,6 +375,9 @@ EXEC EL_DROPEO.Migrar_Fechas 'Envios', 'fecha_entrega';
 
 -- Migrar tiempo de ventas
 EXEC EL_DROPEO.Migrar_Fechas 'Ventas', 'fecha_hora';
+
+-- Migrar tiempo de pagos
+EXEC EL_DROPEO.Migrar_Fechas 'Pagos', 'fecha';
 
 -- Migrar categorias
 INSERT INTO EL_DROPEO.BI_Categoria (nombre)
@@ -424,3 +427,23 @@ LEFT JOIN EL_DROPEO.Sub_Categorias s ON s.id = p.sub_categoria_id
 LEFT JOIN EL_DROPEO.Categorias c ON c.id = s.categoria_id
 LEFT JOIN EL_DROPEO.BI_Categoria BI_c ON c.nombre = BI_c.nombre
 WHERE promocion_aplicada_descuento > 0
+
+INSERT INTO EL_DROPEO.BI_Hechos_Pagos (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id, descuento_aplicado, importe)
+SELECT 
+    s.id as sucursal_id,
+    m.id as medio_de_pago_id,
+    EL_DROPEO.Obtener_Tiempo(p.fecha) as tiempo_id,
+    c.id as cuotas_id,
+    EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
+    dp.descuento_aplicado,
+    p.importe
+FROM EL_DROPEO.Pagos p
+JOIN EL_DROPEO.Medios_De_Pago m ON m.id = p.medio_de_pago_id
+JOIN EL_DROPEO.Detalles d ON p.id = d.pago_id
+JOIN EL_DROPEO.Ventas v on v.id = p.venta_id
+JOIN EL_DROPEO.Cajas caja on caja.id = v.caja_id
+JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
+JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
+JOIN EL_DROPEO.Descuentos_X_Pagos dp ON dp.pago_id = p.id
+JOIN EL_DROPEO.Descuentos d ON d.id = dp.descuento_id
+JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.tipo_pago 
