@@ -5,6 +5,14 @@ GO
 /* Drops */
 ----------
 
+-- DROP VIEWS
+
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Porcentaje_Descuento') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Porcentaje_Descuento;
+GO
+
+-- DROP FUNCTIONS
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Rango_Etario') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
     DROP FUNCTION EL_DROPEO.Obtener_Rango_Etario
 GO
@@ -17,6 +25,8 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cum
     DROP FUNCTION EL_DROPEO.Cumplio_Entrega_Estimada
 GO
 
+-- DROP PROCEDURES
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
 GO
@@ -24,6 +34,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Migrar_Fechas') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Migrar_Fechas
 GO
+
+-- DROP HECHOS
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Envios') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Hechos_Envios
@@ -36,6 +48,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Promociones') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Hechos_Promociones
 GO
+
+-- DROPS DIMENSIONES
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Rango_Etario') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Rango_Etario
@@ -447,3 +461,20 @@ JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
 JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
 JOIN EL_DROPEO.Descuentos_Pagos dp ON dp.pago_id = p.id
 JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.tipo_pago 
+
+
+-------------------------
+/* Creacion de vistas */
+-------------------------
+-- Porcentaje de descuento aplicados en función del total de los tickets según el
+-- mes de cada año.
+
+GO
+
+CREATE VIEW EL_DROPEO.Vista_Porcentaje_Descuento AS
+SELECT
+    tiempo.mes,
+    (SUM(pagos.descuento_aplicado) / SUM(pagos.importe)) * 100 as porcentaje_descuento
+FROM EL_DROPEO.BI_Hechos_Pagos pagos
+JOIN EL_DROPEO.BI_Tiempo tiempo ON tiempo.id = pagos.tiempo_id
+GROUP BY tiempo.mes
