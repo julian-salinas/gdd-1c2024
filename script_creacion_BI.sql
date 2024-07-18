@@ -79,6 +79,19 @@ CREATE TABLE EL_DROPEO.BI_Categoria
     nombre VARCHAR(255) NOT NULL
 )
 
+CREATE TABLE EL_DROPEO.BI_Provincia
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL
+)
+
+CREATE TABLE EL_DROPEO.BI_Turno
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    inicio INT NOT NULL,
+    fin INT NOT NULL
+)
+
 ------------------------
 /* Creacion de hechos */
 ------------------------
@@ -265,6 +278,15 @@ EXEC EL_DROPEO.Migrar_Fechas 'Ventas', 'fecha_hora';
 INSERT INTO EL_DROPEO.BI_Categoria (nombre)
 SELECT nombre as nombre_categoria
 FROM EL_DROPEO.Categorias;
+
+-- Migrar provincias
+INSERT INTO EL_DROPEO.BI_Provincia (nombre)
+SELECT nombre FROM EL_DROPEO.Provincias;
+
+-- Popular turnos
+INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (8, 12);
+INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (12, 16);
+INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (16, 20);
 
 -------------------------
 /* Migracion de hechos */
