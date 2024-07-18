@@ -8,6 +8,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_
     DROP TABLE EL_DROPEO.BI_Hechos_Envios
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Promociones') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Hechos_Promociones
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Rango_Etario') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Rango_Etario
 GO
@@ -18,6 +22,10 @@ GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Tiempo') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Tiempo
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Categoria') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Categoria
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Rango_Etario') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
@@ -65,6 +73,12 @@ CREATE TABLE EL_DROPEO.BI_Tiempo
     mes INT NOT NULL
 )
 
+CREATE TABLE EL_DROPEO.BI_Categoria
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL
+)
+
 ------------------------
 /* Creacion de hechos */
 ------------------------
@@ -76,6 +90,13 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Envios
     cliente_re_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
     cumplio_envio BIT NOT NULL,
     costo_envio DECIMAL(18,2) NOT NULL,
+)
+
+CREATE TABLE EL_DROPEO.BI_Hechos_Promociones
+(
+    tiempo_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tiempo(id),
+    categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Categoria(id),
+    promocion_aplicada_descuento DECIMAL(18,2) NOT NULL
 )
 
 ---------------
@@ -222,7 +243,7 @@ END
 ------------------------------
 /* Migracion de dimensiones */
 ------------------------------
-
+GO
 -- Popular tabla de rango etario
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
@@ -236,6 +257,14 @@ FROM EL_DROPEO.Localidades;
 
 -- Migrar tiempo de envios
 EXEC EL_DROPEO.Migrar_Fechas 'Envios', 'fecha_entrega';
+
+-- Migrar tiempo de ventas
+EXEC EL_DROPEO.Migrar_Fechas 'Ventas', 'fecha_hora';
+
+-- Migrar categorias
+INSERT INTO EL_DROPEO.BI_Categoria (nombre)
+SELECT nombre as nombre_categoria
+FROM EL_DROPEO.Categorias;
 
 -------------------------
 /* Migracion de hechos */
@@ -253,3 +282,17 @@ INNER JOIN EL_DROPEO.Sucursales s ON v.caja_sucursal_id = s.id
 INNER JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
 INNER JOIN EL_DROPEO.Ubicaciones u ON u.id = s.ubicacion_id
 INNER JOIN EL_DROPEO.Localidades l ON l.id = u.localidad_id
+
+INSERT INTO EL_DROPEO.BI_Hechos_Promociones (tiempo_id, categoria_id, promocion_aplicada_descuento)
+SELECT 
+	EL_DROPEO.Obtener_Tiempo(v.fecha_hora) as tiempo_id, 
+	BI_c.id as categoria_id,
+	pr.promocion_aplicada_descuento
+FROM EL_DROPEO.Promociones_X_Items pr
+LEFT JOIN EL_DROPEO.Items i ON i.id = item_id
+LEFT JOIN EL_DROPEO.Ventas v ON v.id = i.venta_id
+LEFT JOIN EL_DROPEO.Productos p ON p.id = i.producto_id
+LEFT JOIN EL_DROPEO.Sub_Categorias s ON s.id = p.sub_categoria_id
+LEFT JOIN EL_DROPEO.Categorias c ON c.id = s.categoria_id
+LEFT JOIN EL_DROPEO.BI_Categoria BI_c ON c.nombre = BI_c.nombre
+WHERE promocion_aplicada_descuento > 0
