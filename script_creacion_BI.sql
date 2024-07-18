@@ -28,6 +28,18 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_
     DROP TABLE EL_DROPEO.BI_Categoria
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Provincia') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Provincia
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Turno') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Turno
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Tipo_Caja') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Tipo_Caja
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Rango_Etario') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
     DROP FUNCTION EL_DROPEO.Obtener_Rango_Etario
 GO
@@ -90,6 +102,12 @@ CREATE TABLE EL_DROPEO.BI_Turno
     id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
     inicio INT NOT NULL,
     fin INT NOT NULL
+)
+
+CREATE TABLE EL_DROPEO.BI_Tipo_Caja
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL
 )
 
 ------------------------
@@ -287,6 +305,10 @@ SELECT nombre FROM EL_DROPEO.Provincias;
 INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (8, 12);
 INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (12, 16);
 INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (16, 20);
+
+-- Migrar tipos de caja
+INSERT INTO EL_DROPEO.BI_Tipo_Caja (nombre)
+SELECT nombre FROM EL_DROPEO.Tipos_Caja;
 
 -------------------------
 /* Migracion de hechos */
