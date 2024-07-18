@@ -4,6 +4,11 @@ GO
 ----------
 /* Drops */
 ----------
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Envios') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Hechos_Envios
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Cumplimiento_Envio') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Cumplimiento_Envio
 GO
@@ -18,6 +23,18 @@ GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Tiempo') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Tiempo
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Medio_De_Pago') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Medio_De_Pago
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Sucursal') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Sucursal
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Cuotas') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Cuotas
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Rango_Etario') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
@@ -58,6 +75,24 @@ CREATE TABLE EL_DROPEO.BI_Tiempo
     mes INT NOT NULL
 )
 
+CREATE TABLE EL_DROPEO.BI_Sucursal
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL
+)
+
+CREATE TABLE EL_DROPEO.BI_Medio_De_Pago
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL
+)
+
+CREATE TABLE EL_DROPEO.BI_Cuotas
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    cantidad INT NOT NULL
+)
+
 ------------------------
 /* Creacion de hechos */
 ------------------------
@@ -69,6 +104,17 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Envios
     cliente_re_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
     cumplimiento_envio_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Cumplimiento_Envio(id),
     costo_envio DECIMAL(18,2) NOT NULL,
+)
+
+CREATE TABLE EL_DROPEO.BI_Hechos_Pagos
+(
+    sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Sucursal(id),
+    medio_de_pago_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Medio_De_Pago(id),
+    tiempo_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tiempo(id),
+    cuotas_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Cuotas(id),
+    cliente_re_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
+    descuento_aplicado DECIMAL(18,2) NOT NULL,
+    importe DECIMAL(18,2) NOT NULL
 )
 
 ------------------------------
@@ -89,6 +135,22 @@ INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (55, 200);
 INSERT INTO EL_DROPEO.BI_Localidad (nombre)
 SELECT DISTINCT nombre as nombre_localidad
 FROM EL_DROPEO.Localidades;
+
+-- Popular Medios de Pago
+
+INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
+SELECT DISTINCT tipo_pago
+FROM EL_DROPEO.Medios_De_Pago;
+
+-- Popular Sucursales
+INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
+SELECT DISTINCT nombre
+FROM EL_DROPEO.Sucursales;
+
+-- Popular Cuotas
+INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
+SELECT DISTINCT cuotas
+FROM EL_DROPEO.Detalles;
 
 -------------------------
 /* Migracion de hechos */
