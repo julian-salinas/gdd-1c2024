@@ -17,12 +17,20 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cum
     DROP FUNCTION EL_DROPEO.Cumplio_Entrega_Estimada
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Buscar_Turno') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Buscar_Turno
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Migrar_Fechas') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Migrar_Fechas
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Ventas') AND type in (N'U'))
+    DROP TABLE EL_DROPEO.BI_Hechos_Ventas
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Envios') AND type in (N'U'))
@@ -136,8 +144,9 @@ CREATE TABLE EL_DROPEO.BI_Cuotas
 CREATE TABLE EL_DROPEO.BI_Turno
 (
     id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-    inicio INT NOT NULL,
-    fin INT NOT NULL
+    nombre NVARCHAR(255) NOT NULL,
+    inicio INT,
+    fin INT
 )
 
 CREATE TABLE EL_DROPEO.BI_Tipo_Caja
@@ -177,41 +186,20 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Pagos
     importe DECIMAL(18,2) NOT NULL
 )
 
-------------------------------
-/* Migracion de dimensiones */
-------------------------------
-
--- Popular tabla de rango etario
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (55, 200);
-
--- Popular tabla de localidades
-INSERT INTO EL_DROPEO.BI_Localidad (nombre)
-SELECT DISTINCT nombre as nombre_localidad
-FROM EL_DROPEO.Localidades;
-
--- Popular Medios de Pago
-
-INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
-SELECT DISTINCT tipo_pago
-FROM EL_DROPEO.Medios_De_Pago;
-
--- Popular Sucursales
-INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
-SELECT DISTINCT nombre
-FROM EL_DROPEO.Sucursales;
-
--- Popular Cuotas
-INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
-SELECT DISTINCT cuotas
-FROM EL_DROPEO.Detalles;
-
--------------------------
-/* Migracion de hechos */
--------------------------
-
+CREATE TABLE EL_DROPEO.BI_Hechos_Ventas
+(
+    tiempo_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tiempo(id),
+    provincia_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Provincia(id),
+    localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Localidad(id),
+    cliente_rango_etario INT FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
+    empleado_rango_etario INT FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
+    sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Sucursal(id),
+    turno_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Turno(id),
+    tipo_caja_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tipo_Caja(id),
+    precio_unitario DECIMAL(18,2) NOT NULL,
+    unidades INT NOT NULL,
+    numero_ticket INT NOT NULL
+)
 
 
 ---------------
@@ -292,6 +280,31 @@ BEGIN
     RETURN @cumplio;
 END
 
+GO
+CREATE FUNCTION EL_DROPEO.Buscar_Turno (@fecha DATETIME)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @hora INT;
+    DECLARE @turno_id INT;
+
+    SET @hora = DATEPART(HOUR, @fecha);
+
+    SELECT @turno_id = id
+    FROM EL_DROPEO.BI_Turno
+    WHERE inicio <= @hora AND fin > @hora;
+
+    -- if turno_id is null, return turno with name "otro"
+    IF @turno_id IS NULL
+    BEGIN
+        SELECT @turno_id = id
+        FROM EL_DROPEO.BI_Turno
+        WHERE nombre = 'otro';
+    END
+
+    RETURN @turno_id;
+END
+
 ----------------
 /* Procedures */
 ----------------
@@ -370,6 +383,33 @@ INSERT INTO EL_DROPEO.BI_Localidad (nombre)
 SELECT DISTINCT nombre as nombre_localidad
 FROM EL_DROPEO.Localidades;
 
+-- Popular Medios de Pago
+
+INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
+SELECT DISTINCT tipo_pago
+FROM EL_DROPEO.Medios_De_Pago;
+
+-- Popular Sucursales
+INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
+SELECT DISTINCT nombre
+FROM EL_DROPEO.Sucursales;
+
+-- Popular Cuotas
+INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
+SELECT DISTINCT cuotas
+FROM EL_DROPEO.Detalles;
+
+-- Popular tabla de rango etario
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (50, 200);
+
+-- Popular tabla de localidades
+INSERT INTO EL_DROPEO.BI_Localidad (nombre)
+SELECT DISTINCT nombre as nombre_localidad
+FROM EL_DROPEO.Localidades;
+
 -- Migrar tiempo de envios
 EXEC EL_DROPEO.Migrar_Fechas 'Envios', 'fecha_entrega';
 
@@ -389,9 +429,10 @@ INSERT INTO EL_DROPEO.BI_Provincia (nombre)
 SELECT nombre FROM EL_DROPEO.Provincias;
 
 -- Popular turnos
-INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (8, 12);
-INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (12, 16);
-INSERT INTO EL_DROPEO.BI_Turno (inicio, fin) VALUES (16, 20);
+INSERT INTO EL_DROPEO.BI_Turno (nombre, inicio, fin) VALUES ('maniana', 8, 12);
+INSERT INTO EL_DROPEO.BI_Turno (nombre, inicio, fin) VALUES ('tarde', 12, 16);
+INSERT INTO EL_DROPEO.BI_Turno (nombre, inicio, fin) VALUES ('noche', 16, 20);
+INSERT INTO EL_DROPEO.BI_TURNO (nombre) VALUES ('otro') 
 
 -- Migrar tipos de caja
 INSERT INTO EL_DROPEO.BI_Tipo_Caja (nombre)
@@ -447,3 +488,31 @@ JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
 JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
 JOIN EL_DROPEO.Descuentos_Pagos dp ON dp.pago_id = p.id
 JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.tipo_pago 
+
+INSERT INTO EL_DROPEO.BI_Hechos_Ventas (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario, sucursal_id, turno_id, tipo_caja_id, precio_unitario, unidades, numero_ticket)
+SELECT
+  EL_DROPEO.Obtener_Tiempo(v.fecha_hora) as tiempo_id,
+  bi_p.id as provincia_id,
+  bi_l.id as localidad_id,
+  EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_rango_etario,
+  EL_DROPEO.Obtener_Rango_Etario(e.fecha_nacimiento) as empleado_rango_etario,
+  bi_s.id as sucursal_id,
+  EL_DROPEO.Buscar_Turno(v.fecha_hora) as turno_id,
+  bi_tc.id as tipo_caja_id,
+  i.precio_unitario as precio_unitario,
+  i.cantidad as unidades,
+  v.numero_ticket
+FROM EL_DROPEO.Ventas v
+LEFT JOIN EL_DROPEO.Sucursales s ON s.id = v.caja_sucursal_id
+LEFT JOIN EL_DROPEO.Ubicaciones u ON u.id = s.ubicacion_id
+LEFT JOIN EL_DROPEO.Localidades l ON l.id = u.localidad_id
+LEFT JOIN EL_DROPEO.Provincias p ON p.id = l.provincia_id
+LEFT JOIN EL_DROPEO.BI_Provincia bi_p ON bi_p.nombre = p.nombre
+LEFT JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.nombre = l.nombre
+LEFT JOIN EL_DROPEO.BI_Sucursal bi_s ON bi_s.nombre = s.nombre
+LEFT JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
+LEFT JOIN EL_DROPEO.Empleados e ON e.id = v.empleado_id
+LEFT JOIN EL_DROPEO.Items i ON i.venta_id = v.id
+LEFT JOIN EL_DROPEO.Cajas caja ON caja.numero = v.caja_numero and caja.sucursal_id = v.caja_sucursal_id
+LEFT JOIN EL_DROPEO.Tipos_Caja tc ON tc.id = caja.tipo_caja_id
+LEFT JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON tc.descripcion = bi_tc.nombre;
