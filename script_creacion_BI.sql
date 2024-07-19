@@ -29,6 +29,22 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Mig
     DROP PROCEDURE EL_DROPEO.Migrar_Fechas
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ticket_Promedio_Mensual') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Ticket_Promedio_Mensual
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cantidad_Unidades_Promedio') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Cantidad_Unidades_Promedio
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Porcentaje_Anual_Ventas') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Porcentaje_Anual_Ventas
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ventas_Por_Turno') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Ventas_Por_Turno
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Ventas') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Hechos_Ventas
 GO
