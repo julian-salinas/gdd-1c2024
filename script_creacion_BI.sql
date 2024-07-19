@@ -21,6 +21,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Bus
     DROP FUNCTION EL_DROPEO.Buscar_Turno
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Buscar_Cuotas') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Buscar_Cuotas
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
 GO
@@ -43,6 +47,22 @@ GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ventas_Por_Turno') AND type in (N'V'))
     DROP VIEW EL_DROPEO.Ventas_Por_Turno
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Top_Categorias_Descuento_Aplicado') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Top_Categorias_Descuento_Aplicado
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Porcentaje_Cumplimiento_Envios') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Porcentaje_Cumplimiento_Envios
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cantidad_Envios_Por_Rango_Etario_Clientes') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Cantidad_Envios_Por_Rango_Etario_Clientes
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Localidades_Con_Mayor_Costo_Envio') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Localidades_Con_Mayor_Costo_Envio
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Ventas') AND type in (N'U'))
@@ -180,6 +200,7 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Envios
     tiempo_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tiempo(id),
     localidad_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Localidad(id),
     cliente_re_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
+    sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Sucursal(id),
     cumplio_envio BIT NOT NULL,
     costo_envio DECIMAL(18,2) NOT NULL,
 )
@@ -321,6 +342,27 @@ BEGIN
     RETURN @turno_id;
 END
 
+GO
+CREATE FUNCTION EL_DROPEO.Buscar_Cuotas (@pago_id INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @id INT;
+    SELECT @id = c.id
+    FROM EL_DROPEO.Detalles d
+    JOIN EL_DROPEO.BI_Cuotas c ON c.cantidad = d.cuotas
+    WHERE d.pago_id = @pago_id;
+
+    IF @id IS NULL
+    BEGIN
+        SELECT @id = c.id
+        FROM EL_DROPEO.BI_Cuotas c
+        WHERE c.cantidad = 0;
+    END
+
+    RETURN @id;
+END
+
 ----------------
 /* Procedures */
 ----------------
@@ -410,6 +452,9 @@ INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
 SELECT DISTINCT cuotas
 FROM EL_DROPEO.Detalles;
 
+INSERT INTO EL_DROPEO.BI_Cuotas (cantidad) VALUES (0)
+
+
 -- Popular tabla de localidades
 INSERT INTO EL_DROPEO.BI_Localidad (nombre)
 SELECT DISTINCT nombre as nombre_localidad
@@ -446,19 +491,22 @@ SELECT descripcion FROM EL_DROPEO.Tipos_Caja;
 -------------------------
 /* Migracion de hechos */
 -------------------------
-INSERT INTO EL_DROPEO.BI_Hechos_Envios (tiempo_id, localidad_id, cliente_re_id, cumplio_envio, costo_envio)
+INSERT INTO EL_DROPEO.BI_Hechos_Envios (tiempo_id, localidad_id, cliente_re_id, sucursal_id, cumplio_envio, costo_envio)
 SELECT
     EL_DROPEO.Obtener_Tiempo(e.fecha_entrega) as tiempo_id,
-    l.id as localidad_id,
+    bi_l.id as localidad_id,
     EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
+    bi_s.id as sucursal_id,
     EL_DROPEO.Cumplio_Entrega_Estimada(e.fecha_programada, e.fecha_entrega, e.hora_inicio, e.hora_fin) as cumplio_envio,
     e.costo
 FROM EL_DROPEO.Envios e
 INNER JOIN EL_DROPEO.Ventas v ON e.venta_id = v.id
 INNER JOIN EL_DROPEO.Sucursales s ON v.caja_sucursal_id = s.id
 INNER JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
-INNER JOIN EL_DROPEO.Ubicaciones u ON u.id = s.ubicacion_id
+INNER JOIN EL_DROPEO.Ubicaciones u ON u.id = c.ubicacion_id
 INNER JOIN EL_DROPEO.Localidades l ON l.id = u.localidad_id
+INNER JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.nombre = l.nombre
+INNER JOIN EL_DROPEO.BI_Sucursal bi_s ON bi_s.nombre = s.nombre
 
 INSERT INTO EL_DROPEO.BI_Hechos_Promociones (tiempo_id, categoria_id, promocion_aplicada_descuento)
 SELECT 
@@ -475,18 +523,16 @@ LEFT JOIN EL_DROPEO.BI_Categoria BI_c ON c.nombre = BI_c.nombre
 WHERE promocion_aplicada_descuento > 0
 
 INSERT INTO EL_DROPEO.BI_Hechos_Pagos (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id, descuento_aplicado, importe)
-SELECT 
+SELECT
     s.id as sucursal_id,
     mp.id as medio_de_pago_id,
     EL_DROPEO.Obtener_Tiempo(p.fecha) as tiempo_id,
-    cuota.id as cuotas_id,
+    EL_DROPEO.Buscar_Cuotas(p.id) as cuotas_id,
     EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
     dp.descuento_aplicado,
     p.importe
 FROM EL_DROPEO.Pagos p
 JOIN EL_DROPEO.Medios_De_Pago m ON m.id = p.medio_de_pago_id
-JOIN EL_DROPEO.Detalles d ON p.id = d.pago_id
-JOIN EL_DROPEO.BI_Cuotas cuota ON cuota.cantidad = d.cuotas
 JOIN EL_DROPEO.Ventas v on v.id = p.venta_id
 JOIN EL_DROPEO.Cajas caja on caja.numero = v.caja_numero and caja.sucursal_id = v.caja_sucursal_id
 JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
@@ -522,8 +568,6 @@ LEFT JOIN EL_DROPEO.Cajas caja ON caja.numero = v.caja_numero and caja.sucursal_
 LEFT JOIN EL_DROPEO.Tipos_Caja tc ON tc.id = caja.tipo_caja_id
 LEFT JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON tc.descripcion = bi_tc.nombre;
 
-END
-
 -----------
 /* Vistas */
 -----------
@@ -543,8 +587,7 @@ AS
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
     GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes
-    ORDER BY ticket_promedio, bi_t.anio, bi_t.mes, bi_l.nombre
-END
+
 
 GO
 CREATE VIEW EL_DROPEO.Cantidad_Unidades_Promedio
@@ -563,8 +606,7 @@ AS
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre, bi_hv.numero_ticket
-	ORDER BY unidades_promedio, bi_t.anio, bi_t.cuatrimestre, bi_hv.numero_ticket, bi_hv.turno_id
-END
+
 
 GO
 CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas
@@ -589,8 +631,6 @@ AS
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
     GROUP BY bi_hv.empleado_rango_etario, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre
-    ORDER BY porcentaje, bi_t.anio, bi_t.cuatrimestre, bi_hv.empleado_rango_etario, bi_tc.nombre
-END
 
 GO
 CREATE VIEW EL_DROPEO.Ventas_Por_Turno
@@ -598,7 +638,6 @@ CREATE VIEW EL_DROPEO.Ventas_Por_Turno
   Para cada localidad según el mes de cada año. 
 */
 AS
-BEGIN
     SELECT
         bi_l.nombre as localidad,
         bi_t.anio,
@@ -610,4 +649,77 @@ BEGIN
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
     JOIN EL_DROPEO.BI_Turno bi_tur ON bi_tur.id = bi_hv.turno_id
     GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes, bi_tur.nombre
-    ORDER BY COUNT(*) DESC, bi_t.anio, bi_t.mes, bi_l.nombre, bi_tur.nombre
+
+GO
+CREATE VIEW EL_DROPEO.Top_Categorias_Descuento_Aplicado
+/* 
+  Las tres categorías de productos con mayor descuento aplicado 
+  A partir de promociones para cada cuatrimestre de cada año 
+*/
+AS
+	SELECT 
+		categoria, 
+		anio, 
+		cuatrimestre, 
+		descuento_total
+    FROM (
+        SELECT
+            bi_c.nombre as categoria,
+            bi_t.anio,
+            bi_t.cuatrimestre,
+            SUM(bi_hp.promocion_aplicada_descuento) as descuento_total,
+            ROW_NUMBER() OVER (PARTITION BY bi_t.anio, bi_t.cuatrimestre ORDER BY SUM(bi_hp.promocion_aplicada_descuento) DESC) as rn
+        FROM EL_DROPEO.BI_Hechos_Promociones bi_hp
+        JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hp.tiempo_id
+        JOIN EL_DROPEO.BI_Categoria bi_c ON bi_c.id = bi_hp.categoria_id
+        GROUP BY bi_c.nombre, bi_t.anio, bi_t.cuatrimestre
+    ) as sq
+    WHERE rn <= 3
+
+GO
+CREATE VIEW EL_DROPEO.Porcentaje_Cumplimiento_Envios
+/*
+  En los tiempos programados por sucursal por año/mes (desvío)
+*/
+AS
+    SELECT
+        bi_s.nombre as sucursal,
+        bi_t.anio,
+        bi_t.mes,
+        CONVERT(DECIMAL(10,2), (SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN 1 ELSE 0 END)) / CONVERT(DECIMAL(10,2), COUNT(*))) * 100 as porcentaje_cumplimiento,
+		SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN 1 ELSE 0 END) cant_cumplieron,
+		count(*) total
+    FROM EL_DROPEO.BI_Hechos_Envios bi_he
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_he.tiempo_id
+    JOIN EL_DROPEO.BI_Sucursal bi_s ON bi_s.id = bi_he.sucursal_id
+    GROUP BY bi_s.nombre, bi_t.anio, bi_t.mes
+
+GO
+CREATE VIEW EL_DROPEO.Cantidad_Envios_Por_Rango_Etario_Clientes
+/*
+ Para cada cuatrimestre de cada año
+*/
+AS
+    SELECT
+        bi_r.inicio as rango_etario_inicio,
+        bi_r.fin as rango_etario_fin,
+        bi_t.anio,
+        bi_t.cuatrimestre,
+        COUNT(*) as cantidad_envios
+    FROM EL_DROPEO.BI_Hechos_Envios bi_he
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_he.tiempo_id
+    JOIN EL_DROPEO.BI_Rango_Etario bi_r ON bi_r.id = bi_he.cliente_re_id
+    GROUP BY bi_r.inicio, bi_r.fin, bi_t.anio, bi_t.cuatrimestre
+
+GO
+CREATE VIEW EL_DROPEO.Localidades_Con_Mayor_Costo_Envio
+/*
+  Tomando la localidad del cliente
+*/
+AS
+    SELECT 
+        bi_l.nombre as localidad,
+        SUM(bi_he.costo_envio) as costo_total
+    FROM EL_DROPEO.BI_Hechos_Envios bi_he
+    JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_he.localidad_id
+    GROUP BY bi_l.nombre
