@@ -199,32 +199,6 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Pagos
 /* Migracion de dimensiones */
 ------------------------------
 
--- Popular tabla de rango etario
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (55, 200);
-
--- Popular tabla de localidades
-INSERT INTO EL_DROPEO.BI_Localidad (nombre)
-SELECT DISTINCT nombre as nombre_localidad
-FROM EL_DROPEO.Localidades;
-
--- Popular Medios de Pago
-
-INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
-SELECT DISTINCT descripcion
-FROM EL_DROPEO.Medios_De_Pago;
-
--- Popular Sucursales
-INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
-SELECT DISTINCT nombre
-FROM EL_DROPEO.Sucursales;
-
--- Popular Cuotas
-INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
-SELECT DISTINCT cuotas
-FROM EL_DROPEO.Detalles;
 
 ---------------
 /* Funciones */
@@ -371,6 +345,23 @@ END
 /* Migracion de dimensiones */
 ------------------------------
 GO
+
+-- Popular Medios de Pago
+
+INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
+SELECT DISTINCT descripcion
+FROM EL_DROPEO.Medios_De_Pago;
+
+-- Popular Sucursales
+INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
+SELECT DISTINCT nombre
+FROM EL_DROPEO.Sucursales;
+
+-- Popular Cuotas
+INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
+SELECT DISTINCT cuotas
+FROM EL_DROPEO.Detalles;
+
 -- Popular tabla de rango etario
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
@@ -506,3 +497,18 @@ FROM (
     GROUP BY s.nombre, mp.nombre, bi_t.anio, bi_t.mes
 ) as subquery
 WHERE subquery.rn <= 3
+
+-- Promedio de importe de la cuota en función del rango etareo del cliente.
+
+GO
+
+CREATE VIEW EL_DROPEO.Vista_Promedio_Importe_Cuota AS
+SELECT
+    re.inicio,
+    re.fin,
+    c.cantidad,
+    AVG(pagos.importe) as promedio_importe_cuota
+FROM EL_DROPEO.BI_Hechos_Pagos pagos
+JOIN EL_DROPEO.BI_Cuotas c ON c.id = pagos.cuotas_id
+JOIN EL_DROPEO.BI_Rango_Etario re ON re.id = pagos.cliente_re_id
+GROUP BY re.inicio, re.fin, c.cantidad
