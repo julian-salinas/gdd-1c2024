@@ -505,3 +505,89 @@ LEFT JOIN EL_DROPEO.Items i ON i.venta_id = v.id
 LEFT JOIN EL_DROPEO.Cajas caja ON caja.numero = v.caja_numero and caja.sucursal_id = v.caja_sucursal_id
 LEFT JOIN EL_DROPEO.Tipos_Caja tc ON tc.id = caja.tipo_caja_id
 LEFT JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON tc.descripcion = bi_tc.nombre;
+
+END
+
+-----------
+/* Vistas */
+-----------
+GO
+CREATE VIEW EL_DROPEO.Ticket_Promedio_Mensual
+/*
+  Valor promedio de las ventas (en $) según la localidad, año y mes. 
+  Se calcula en función de la sumatoria del importe de las ventas sobre el total de las mismas
+*/
+AS
+    SELECT
+        bi_l.nombre as localidad,
+        bi_t.anio,
+        bi_t.mes,
+        SUM(bi_hv.precio_unitario * bi_hv.unidades) / SUM(bi_hv.unidades) as ticket_promedio
+    FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
+    JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
+    GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes
+END
+
+GO
+CREATE VIEW EL_DROPEO.Cantidad_Unidades_Promedio
+/*
+  Cantidad promedio de artículos que se venden en función de los tickets según el turno para cada cuatrimestre de cada año. 
+  Se obtiene sumando la cantidad de artículos de todos los tickets correspondientes sobre la cantidad de tickets. 
+  Si un producto tiene más de una unidad en un ticket, para el indicador se consideran todas las unidades.
+*/
+AS
+    SELECT
+        bi_hv.turno_id,
+        bi_hv.numero_ticket,
+        bi_t.anio,
+        bi_t.cuatrimestre,
+        SUM(bi_hv.unidades) / COUNT(*) as unidades_promedio
+    FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
+    GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre, bi_hv.numero_ticket
+END
+
+GO
+CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas
+/*
+  Registradas por rango etario del empleado según el tipo de caja para cada cuatrimestre. 
+  Se calcula tomando la cantidad de ventas correspondientes sobre el total de ventas anual
+*/
+AS
+    SELECT
+        bi_hv.empleado_rango_etario,
+        bi_tc.nombre as tipo_caja,
+        bi_t.anio,
+        bi_t.cuatrimestre,
+        CONVERT(DECIMAL(10, 2), COUNT(*)) / CONVERT(
+            DECIMAL(10, 2),
+            (SELECT COUNT(*)
+            FROM EL_DROPEO.BI_Hechos_Ventas 
+            JOIN EL_DROPEO.BI_Tiempo ON BI_Tiempo.id = BI_Hechos_Ventas.tiempo_id 
+            WHERE BI_Tiempo.anio = bi_t.anio)
+        ) AS porcentaje,
+        FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
+        JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
+        JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
+        GROUP BY bi_hv.empleado_rango_etario, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre;
+END
+
+GO
+CREATE VIEW EL_DROPEO.Ventas_Por_Turno
+/*
+  Para cada localidad según el mes de cada año. 
+*/
+AS
+BEGIN
+    SELECT
+        bi_l.nombre as localidad,
+        bi_t.anio,
+        bi_t.mes,
+        bi_tur.nombre as turno,
+        COUNT(*) as cantidad_ventas
+    FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
+    JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
+    JOIN EL_DROPEO.BI_Turno bi_tur ON bi_tur.id = bi_hv.turno_id
+    GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes, bi_hv.turno_id
