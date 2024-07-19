@@ -177,7 +177,8 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Promociones
 (
     tiempo_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tiempo(id),
     categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Categoria(id),
-    promocion_aplicada_descuento DECIMAL(18,2) NOT NULL
+    promocion_aplicada_descuento DECIMAL(18,2) NOT NULL,
+    PRIMARY KEY (tiempo_id, categoria_id)
 )
 
 CREATE TABLE EL_DROPEO.BI_Hechos_Pagos
@@ -426,7 +427,7 @@ INSERT INTO EL_DROPEO.BI_Hechos_Promociones (tiempo_id, categoria_id, promocion_
 SELECT 
 	EL_DROPEO.Obtener_Tiempo(v.fecha_hora) as tiempo_id, 
 	BI_c.id as categoria_id,
-	pr.promocion_aplicada_descuento
+	SUM(pr.promocion_aplicada_descuento)
 FROM EL_DROPEO.Promociones_X_Items pr
 LEFT JOIN EL_DROPEO.Items i ON i.id = item_id
 LEFT JOIN EL_DROPEO.Ventas v ON v.id = i.venta_id
@@ -435,6 +436,7 @@ LEFT JOIN EL_DROPEO.Sub_Categorias s ON s.id = p.sub_categoria_id
 LEFT JOIN EL_DROPEO.Categorias c ON c.id = s.categoria_id
 LEFT JOIN EL_DROPEO.BI_Categoria BI_c ON c.nombre = BI_c.nombre
 WHERE promocion_aplicada_descuento > 0
+GROUP BY EL_DROPEO.Obtener_Tiempo(v.fecha_hora), BI_c.id
 
 INSERT INTO EL_DROPEO.BI_Hechos_Pagos (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id, descuento_aplicado, importe)
 SELECT 
