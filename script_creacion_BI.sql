@@ -543,6 +543,7 @@ AS
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
     GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes
+    ORDER BY ticket_promedio, bi_t.anio, bi_t.mes, bi_l.nombre
 END
 
 GO
@@ -562,6 +563,7 @@ AS
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre, bi_hv.numero_ticket
+	ORDER BY unidades_promedio, bi_t.anio, bi_t.cuatrimestre, bi_hv.numero_ticket, bi_hv.turno_id
 END
 
 GO
@@ -582,11 +584,12 @@ AS
             FROM EL_DROPEO.BI_Hechos_Ventas 
             JOIN EL_DROPEO.BI_Tiempo ON BI_Tiempo.id = BI_Hechos_Ventas.tiempo_id 
             WHERE BI_Tiempo.anio = bi_t.anio)
-        ) AS porcentaje,
-        FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
-        JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
-        JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
-        GROUP BY bi_hv.empleado_rango_etario, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre;
+        ) AS porcentaje
+    FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
+    JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
+    GROUP BY bi_hv.empleado_rango_etario, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre
+    ORDER BY porcentaje, bi_t.anio, bi_t.cuatrimestre, bi_hv.empleado_rango_etario, bi_tc.nombre
 END
 
 GO
@@ -606,4 +609,5 @@ BEGIN
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
     JOIN EL_DROPEO.BI_Turno bi_tur ON bi_tur.id = bi_hv.turno_id
-    GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes, bi_hv.turno_id
+    GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes, bi_tur.nombre
+    ORDER BY COUNT(*) DESC, bi_t.anio, bi_t.mes, bi_l.nombre, bi_tur.nombre
