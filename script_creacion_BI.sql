@@ -5,6 +5,26 @@ GO
 /* Drops */
 ----------
 
+-- DROP VIEWS
+
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Promedio_Importe_Cuota') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Promedio_Importe_Cuota;
+GO
+
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Porcentaje_Descuento_Medio_Pago') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Porcentaje_Descuento_Medio_Pago;
+GO
+
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Importe_Pagos_Cuotas') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Importe_Pagos_Cuotas;
+GO
+
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Porcentaje_Descuento') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Porcentaje_Descuento;
+GO
+
+-- DROP FUNCTIONS
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Rango_Etario') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
     DROP FUNCTION EL_DROPEO.Obtener_Rango_Etario
 GO
@@ -17,6 +37,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Cum
     DROP FUNCTION EL_DROPEO.Cumplio_Entrega_Estimada
 GO
 
+-- DROP PROCEDURES
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Buscar_Turno') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
     DROP FUNCTION EL_DROPEO.Buscar_Turno
 GO
@@ -33,6 +54,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Mig
     DROP PROCEDURE EL_DROPEO.Migrar_Fechas
 GO
 
+-- DROP HECHOS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ticket_Promedio_Mensual') AND type in (N'V'))
     DROP VIEW EL_DROPEO.Ticket_Promedio_Mensual
 GO
@@ -80,6 +102,8 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Promociones') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Hechos_Promociones
 GO
+
+-- DROPS DIMENSIONES
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Rango_Etario') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Rango_Etario
@@ -237,7 +261,6 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Ventas
     unidades INT NOT NULL,
     numero_ticket INT NOT NULL
 )
-
 
 ---------------
 /* Funciones */
@@ -430,6 +453,23 @@ END
 /* Migracion de dimensiones */
 ------------------------------
 GO
+
+-- Popular Medios de Pago
+
+INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
+SELECT DISTINCT descripcion
+FROM EL_DROPEO.Medios_De_Pago;
+
+-- Popular Sucursales
+INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
+SELECT DISTINCT nombre
+FROM EL_DROPEO.Sucursales;
+
+-- Popular Cuotas
+INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
+SELECT DISTINCT cuotas
+FROM EL_DROPEO.Detalles;
+
 -- Popular tabla de rango etario
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
@@ -538,7 +578,7 @@ JOIN EL_DROPEO.Cajas caja on caja.numero = v.caja_numero and caja.sucursal_id = 
 JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
 JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
 JOIN EL_DROPEO.Descuentos_Pagos dp ON dp.pago_id = p.id
-JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.tipo_pago 
+JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.descripcion
 
 INSERT INTO EL_DROPEO.BI_Hechos_Ventas (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario, sucursal_id, turno_id, tipo_caja_id, precio_unitario, unidades, numero_ticket)
 SELECT
@@ -568,15 +608,80 @@ LEFT JOIN EL_DROPEO.Cajas caja ON caja.numero = v.caja_numero and caja.sucursal_
 LEFT JOIN EL_DROPEO.Tipos_Caja tc ON tc.id = caja.tipo_caja_id
 LEFT JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON tc.descripcion = bi_tc.nombre;
 
------------
-/* Vistas */
------------
+-------------------------
+/* Creacion de vistas */
+-------------------------
+
+-- Porcentaje de descuento aplicados en función del total de los tickets según el
+-- mes de cada año.
+GO
+CREATE VIEW EL_DROPEO.Vista_Porcentaje_Descuento AS
+SELECT
+    tiempo.mes,
+    (SUM(pagos.descuento_aplicado) / SUM(pagos.importe)) * 100 as porcentaje_descuento
+FROM EL_DROPEO.BI_Hechos_Pagos pagos
+JOIN EL_DROPEO.BI_Tiempo tiempo ON tiempo.id = pagos.tiempo_id
+GROUP BY tiempo.mes
+
+-- Las 3 sucursales con el mayor importe de pagos en cuotas, según el medio de
+-- pago, mes y año. Se calcula sumando los importes totales de todas las ventas en
+-- cuotas.
+GO
+CREATE VIEW EL_DROPEO.Vista_Importe_Pagos_Cuotas AS
+SELECT
+    subquery.sucursal,
+    subquery.medio_de_pago,
+    subquery.anio,
+    subquery.mes,
+    subquery.importe_total
+FROM (
+    SELECT
+        s.nombre as sucursal,
+        mp.nombre as medio_de_pago,
+        bi_t.anio,
+        bi_t.mes,
+        SUM(bi_p.importe) as importe_total,
+        ROW_NUMBER() OVER (PARTITION BY mp.nombre, bi_t.anio, bi_t.mes ORDER BY SUM(bi_p.importe) DESC) as rn
+    FROM EL_DROPEO.BI_Hechos_Pagos bi_p
+    JOIN EL_DROPEO.BI_Sucursal s ON s.id = bi_p.sucursal_id
+    JOIN EL_DROPEO.BI_Medio_De_Pago mp ON mp.id = bi_p.medio_de_pago_id
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_p.tiempo_id
+    JOIN EL_DROPEO.BI_Cuotas bi_c ON bi_c.id = bi_p.cuotas_id
+    GROUP BY s.nombre, mp.nombre, bi_t.anio, bi_t.mes
+) as subquery
+WHERE subquery.rn <= 3
+
+-- Promedio de importe de la cuota en función del rango etareo del cliente.
+GO
+CREATE VIEW EL_DROPEO.Vista_Promedio_Importe_Cuota AS
+SELECT
+    re.inicio,
+    re.fin,
+    c.cantidad,
+    AVG(pagos.importe) as promedio_importe_cuota
+FROM EL_DROPEO.BI_Hechos_Pagos pagos
+JOIN EL_DROPEO.BI_Cuotas c ON c.id = pagos.cuotas_id
+JOIN EL_DROPEO.BI_Rango_Etario re ON re.id = pagos.cliente_re_id
+GROUP BY re.inicio, re.fin, c.cantidad
+
+-- Porcentaje de descuento aplicado por cada medio de pago en función del valor
+-- de total de pagos sin el descuento, por cuatrimestre. Es decir, total de descuentos
+-- sobre el total de pagos más el total de descuentos.
+GO
+CREATE VIEW EL_DROPEO.Vista_Porcentaje_Descuento_Medio_Pago AS
+SELECT
+    bi_t.cuatrimestre,
+    mp.nombre as medio_de_pago,
+    (SUM(pagos.descuento_aplicado) / (SUM(pagos.importe) + SUM(pagos.descuento_aplicado))) * 100 as porcentaje_descuento
+FROM EL_DROPEO.BI_Hechos_Pagos pagos
+JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = pagos.tiempo_id
+JOIN EL_DROPEO.BI_Medio_De_Pago mp ON mp.id = pagos.medio_de_pago_id
+GROUP BY bi_t.cuatrimestre, mp.nombre
+
+--  Valor promedio de las ventas (en $) según la localidad, año y mes. 
+--  Se calcula en función de la sumatoria del importe de las ventas sobre el total de las mismas
 GO
 CREATE VIEW EL_DROPEO.Ticket_Promedio_Mensual
-/*
-  Valor promedio de las ventas (en $) según la localidad, año y mes. 
-  Se calcula en función de la sumatoria del importe de las ventas sobre el total de las mismas
-*/
 AS
     SELECT
         bi_l.nombre as localidad,
@@ -589,13 +694,11 @@ AS
     GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes
 
 
+-- Cantidad promedio de artículos que se venden en función de los tickets según el turno para cada cuatrimestre de cada año. 
+-- Se obtiene sumando la cantidad de artículos de todos los tickets correspondientes sobre la cantidad de tickets. 
+-- Si un producto tiene más de una unidad en un ticket, para el indicador se consideran todas las unidades.
 GO
 CREATE VIEW EL_DROPEO.Cantidad_Unidades_Promedio
-/*
-  Cantidad promedio de artículos que se venden en función de los tickets según el turno para cada cuatrimestre de cada año. 
-  Se obtiene sumando la cantidad de artículos de todos los tickets correspondientes sobre la cantidad de tickets. 
-  Si un producto tiene más de una unidad en un ticket, para el indicador se consideran todas las unidades.
-*/
 AS
     SELECT
         bi_hv.turno_id,
@@ -608,12 +711,10 @@ AS
     GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre, bi_hv.numero_ticket
 
 
+-- Registradas por rango etario del empleado según el tipo de caja para cada cuatrimestre. 
+-- Se calcula tomando la cantidad de ventas correspondientes sobre el total de ventas anual
 GO
 CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas
-/*
-  Registradas por rango etario del empleado según el tipo de caja para cada cuatrimestre. 
-  Se calcula tomando la cantidad de ventas correspondientes sobre el total de ventas anual
-*/
 AS
     SELECT
         bi_hv.empleado_rango_etario,
@@ -632,11 +733,9 @@ AS
     JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
     GROUP BY bi_hv.empleado_rango_etario, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre
 
+-- Para cada localidad según el mes de cada año. 
 GO
 CREATE VIEW EL_DROPEO.Ventas_Por_Turno
-/*
-  Para cada localidad según el mes de cada año. 
-*/
 AS
     SELECT
         bi_l.nombre as localidad,
@@ -650,12 +749,10 @@ AS
     JOIN EL_DROPEO.BI_Turno bi_tur ON bi_tur.id = bi_hv.turno_id
     GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes, bi_tur.nombre
 
+-- Las tres categorías de productos con mayor descuento aplicado 
+-- A partir de promociones para cada cuatrimestre de cada año 
 GO
 CREATE VIEW EL_DROPEO.Top_Categorias_Descuento_Aplicado
-/* 
-  Las tres categorías de productos con mayor descuento aplicado 
-  A partir de promociones para cada cuatrimestre de cada año 
-*/
 AS
 	SELECT 
 		categoria, 
@@ -676,11 +773,9 @@ AS
     ) as sq
     WHERE rn <= 3
 
+-- Porcentaje de cumplimiento de envíos en los tiempos programados por sucursal por año/mes (desvío)
 GO
 CREATE VIEW EL_DROPEO.Porcentaje_Cumplimiento_Envios
-/*
-  En los tiempos programados por sucursal por año/mes (desvío)
-*/
 AS
     SELECT
         bi_s.nombre as sucursal,
@@ -694,11 +789,9 @@ AS
     JOIN EL_DROPEO.BI_Sucursal bi_s ON bi_s.id = bi_he.sucursal_id
     GROUP BY bi_s.nombre, bi_t.anio, bi_t.mes
 
+-- Cantidad de envíos por rango etario del cliente, para cada cuatrimestre de cada año
 GO
 CREATE VIEW EL_DROPEO.Cantidad_Envios_Por_Rango_Etario_Clientes
-/*
- Para cada cuatrimestre de cada año
-*/
 AS
     SELECT
         bi_r.inicio as rango_etario_inicio,
@@ -711,11 +804,9 @@ AS
     JOIN EL_DROPEO.BI_Rango_Etario bi_r ON bi_r.id = bi_he.cliente_re_id
     GROUP BY bi_r.inicio, bi_r.fin, bi_t.anio, bi_t.cuatrimestre
 
+-- Localidades con mayor costo de envío, tomando la localidad del cliente
 GO
 CREATE VIEW EL_DROPEO.Localidades_Con_Mayor_Costo_Envio
-/*
-  Tomando la localidad del cliente
-*/
 AS
     SELECT 
         bi_l.nombre as localidad,
