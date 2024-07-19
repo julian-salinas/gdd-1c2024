@@ -7,6 +7,10 @@ GO
 
 -- DROP VIEWS
 
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Importe_Pagos_Cuotas') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Importe_Pagos_Cuotas;
+GO
+
 IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Porcentaje_Descuento') and type in (N'V'))
 DROP VIEW EL_DROPEO.Vista_Porcentaje_Descuento;
 GO
@@ -209,7 +213,7 @@ FROM EL_DROPEO.Localidades;
 -- Popular Medios de Pago
 
 INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
-SELECT DISTINCT tipo_pago
+SELECT DISTINCT descripcion
 FROM EL_DROPEO.Medios_De_Pago;
 
 -- Popular Sucursales
@@ -454,7 +458,7 @@ JOIN EL_DROPEO.Cajas caja on caja.numero = v.caja_numero and caja.sucursal_id = 
 JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
 JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
 JOIN EL_DROPEO.Descuentos_Pagos dp ON dp.pago_id = p.id
-JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.tipo_pago 
+JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.descripcion
 
 
 -------------------------
@@ -472,3 +476,33 @@ SELECT
 FROM EL_DROPEO.BI_Hechos_Pagos pagos
 JOIN EL_DROPEO.BI_Tiempo tiempo ON tiempo.id = pagos.tiempo_id
 GROUP BY tiempo.mes
+
+-- Las 3 sucursales con el mayor importe de pagos en cuotas, según el medio de
+-- pago, mes y año. Se calcula sumando los importes totales de todas las ventas en
+-- cuotas.
+
+GO
+
+CREATE VIEW EL_DROPEO.Vista_Importe_Pagos_Cuotas AS
+SELECT
+    subquery.sucursal,
+    subquery.medio_de_pago,
+    subquery.anio,
+    subquery.mes,
+    subquery.importe_total
+FROM (
+    SELECT
+        s.nombre as sucursal,
+        mp.nombre as medio_de_pago,
+        bi_t.anio,
+        bi_t.mes,
+        SUM(bi_p.importe) as importe_total,
+        ROW_NUMBER() OVER (PARTITION BY mp.nombre, bi_t.anio, bi_t.mes ORDER BY SUM(bi_p.importe) DESC) as rn
+    FROM EL_DROPEO.BI_Hechos_Pagos bi_p
+    JOIN EL_DROPEO.BI_Sucursal s ON s.id = bi_p.sucursal_id
+    JOIN EL_DROPEO.BI_Medio_De_Pago mp ON mp.id = bi_p.medio_de_pago_id
+    JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_p.tiempo_id
+    JOIN EL_DROPEO.BI_Cuotas bi_c ON bi_c.id = bi_p.cuotas_id
+    GROUP BY s.nombre, mp.nombre, bi_t.anio, bi_t.mes
+) as subquery
+WHERE subquery.rn <= 3
