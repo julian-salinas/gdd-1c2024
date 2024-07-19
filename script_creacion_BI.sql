@@ -87,6 +87,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Loc
     DROP VIEW EL_DROPEO.Localidades_Con_Mayor_Costo_Envio
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Porcentaje_Descuento_Aplicado') AND type in (N'V'))
+    DROP VIEW EL_DROPEO.Porcentaje_Descuento_Aplicado
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.BI_Hechos_Ventas') AND type in (N'U'))
     DROP TABLE EL_DROPEO.BI_Hechos_Ventas
 GO
@@ -454,21 +458,10 @@ END
 ------------------------------
 GO
 
--- Popular Medios de Pago
-
-INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
-SELECT DISTINCT descripcion
-FROM EL_DROPEO.Medios_De_Pago;
-
 -- Popular Sucursales
 INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
 SELECT DISTINCT nombre
 FROM EL_DROPEO.Sucursales;
-
--- Popular Cuotas
-INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
-SELECT DISTINCT cuotas
-FROM EL_DROPEO.Detalles;
 
 -- Popular tabla de rango etario
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
@@ -479,13 +472,8 @@ INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (50, 200);
 -- Popular Medios de Pago
 
 INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
-SELECT DISTINCT tipo_pago
+SELECT DISTINCT descripcion
 FROM EL_DROPEO.Medios_De_Pago;
-
--- Popular Sucursales
-INSERT INTO EL_DROPEO.BI_Sucursal (nombre)
-SELECT DISTINCT nombre
-FROM EL_DROPEO.Sucursales;
 
 -- Popular Cuotas
 INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
@@ -814,3 +802,41 @@ AS
     FROM EL_DROPEO.BI_Hechos_Envios bi_he
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_he.localidad_id
     GROUP BY bi_l.nombre
+
+
+-- Porcentaje de descuento aplicados en función del total de los tickets 
+-- Según el mes de cada año.
+GO
+CREATE VIEW EL_DROPEO.Porcentaje_Descuento_Aplicado
+AS 
+    SELECT 
+        ventas.anio AS anio,
+        ventas.mes AS mes,
+        ((total_promo_descuento_aplicado + total_descuentos_pagos) / total_tickets) * 100 AS porcentaje_descuento
+    FROM (
+        SELECT
+            t.anio AS anio,
+            t.mes AS mes,
+            sum(precio_unitario * unidades) AS total_tickets
+        FROM el_dropeo.bi_hechos_ventas bi_hv
+        JOIN el_dropeo.bi_tiempo t ON bi_hv.tiempo_id = t.id
+        GROUP BY t.anio, t.mes
+    ) AS ventas
+    JOIN (
+        SELECT
+            tpr.anio AS anio,
+            tpr.mes AS mes,
+            sum(bi_hpr.promocion_aplicada_descuento) AS total_promo_descuento_aplicado
+        FROM el_dropeo.bi_hechos_promociones bi_hpr
+        JOIN el_dropeo.bi_tiempo tpr ON bi_hpr.tiempo_id = tpr.id
+        GROUP BY tpr.anio, tpr.mes
+    ) as promos ON promos.anio = ventas.anio AND promos.mes = ventas.mes
+    JOIN (
+        SELECT 
+            tp.anio as anio,
+            tp.mes as mes,
+            sum(bi_hp.descuento_aplicado) AS total_descuentos_pagos 
+        FROM el_dropeo.bi_hechos_pagos bi_hp
+        JOIN el_dropeo.bi_tiempo tp ON bi_hp.tiempo_id = tp.id
+        GROUP BY tp.anio, tp.mes
+    ) AS pagos ON pagos.anio = ventas.anio AND pagos.mes = ventas.mes
