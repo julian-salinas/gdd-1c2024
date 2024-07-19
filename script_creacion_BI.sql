@@ -21,6 +21,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Bus
     DROP FUNCTION EL_DROPEO.Buscar_Turno
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Buscar_Cuotas') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Buscar_Cuotas
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
 GO
@@ -338,6 +342,27 @@ BEGIN
     RETURN @turno_id;
 END
 
+GO
+CREATE FUNCTION EL_DROPEO.Buscar_Cuotas (@pago_id INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @id INT;
+    SELECT @id = c.id
+    FROM EL_DROPEO.Detalles d
+    JOIN EL_DROPEO.BI_Cuotas c ON c.cantidad = d.cuotas
+    WHERE d.pago_id = @pago_id;
+
+    IF @id IS NULL
+    BEGIN
+        SELECT @id = c.id
+        FROM EL_DROPEO.BI_Cuotas c
+        WHERE c.cantidad = 0;
+    END
+
+    RETURN @id;
+END
+
 ----------------
 /* Procedures */
 ----------------
@@ -427,6 +452,9 @@ INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
 SELECT DISTINCT cuotas
 FROM EL_DROPEO.Detalles;
 
+INSERT INTO EL_DROPEO.BI_Cuotas (cantidad) VALUES (0)
+
+
 -- Popular tabla de localidades
 INSERT INTO EL_DROPEO.BI_Localidad (nombre)
 SELECT DISTINCT nombre as nombre_localidad
@@ -495,18 +523,16 @@ LEFT JOIN EL_DROPEO.BI_Categoria BI_c ON c.nombre = BI_c.nombre
 WHERE promocion_aplicada_descuento > 0
 
 INSERT INTO EL_DROPEO.BI_Hechos_Pagos (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id, descuento_aplicado, importe)
-SELECT 
+SELECT
     s.id as sucursal_id,
     mp.id as medio_de_pago_id,
     EL_DROPEO.Obtener_Tiempo(p.fecha) as tiempo_id,
-    cuota.id as cuotas_id,
+    EL_DROPEO.Buscar_Cuotas(p.id) as cuotas_id,
     EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
     dp.descuento_aplicado,
     p.importe
 FROM EL_DROPEO.Pagos p
 JOIN EL_DROPEO.Medios_De_Pago m ON m.id = p.medio_de_pago_id
-JOIN EL_DROPEO.Detalles d ON p.id = d.pago_id
-JOIN EL_DROPEO.BI_Cuotas cuota ON cuota.cantidad = d.cuotas
 JOIN EL_DROPEO.Ventas v on v.id = p.venta_id
 JOIN EL_DROPEO.Cajas caja on caja.numero = v.caja_numero and caja.sucursal_id = v.caja_sucursal_id
 JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
