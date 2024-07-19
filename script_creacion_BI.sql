@@ -606,7 +606,7 @@ GO
 CREATE VIEW EL_DROPEO.Vista_Porcentaje_Descuento AS
 SELECT
     tiempo.mes,
-    (SUM(pagos.descuento_aplicado) / SUM(pagos.importe)) * 100 as porcentaje_descuento
+    (SUM(pagos.descuento_aplicado) / SUM(pagos.importe + pagos.descuento_aplicado)) * 100 as porcentaje_descuento
 FROM EL_DROPEO.BI_Hechos_Pagos pagos
 JOIN EL_DROPEO.BI_Tiempo tiempo ON tiempo.id = pagos.tiempo_id
 GROUP BY tiempo.mes
@@ -690,19 +690,18 @@ CREATE VIEW EL_DROPEO.Cantidad_Unidades_Promedio
 AS
     SELECT
         bi_hv.turno_id,
-        bi_hv.numero_ticket,
         bi_t.anio,
         bi_t.cuatrimestre,
-        SUM(bi_hv.unidades) / COUNT(*) as unidades_promedio
+        SUM(bi_hv.unidades) / COUNT(distinct bi_hv.numero_ticket) as unidades_promedio
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
-    GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre, bi_hv.numero_ticket
+    GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre
 
 
 -- Registradas por rango etario del empleado según el tipo de caja para cada cuatrimestre. 
 -- Se calcula tomando la cantidad de ventas correspondientes sobre el total de ventas anual
 GO
-CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas
+CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas -- ESTA OK, si sumas los porcentajes te casi el total, debe ser un error de redondeo
 AS
     SELECT
         bi_hv.empleado_rango_etario,
@@ -715,7 +714,7 @@ AS
             FROM EL_DROPEO.BI_Hechos_Ventas 
             JOIN EL_DROPEO.BI_Tiempo ON BI_Tiempo.id = BI_Hechos_Ventas.tiempo_id 
             WHERE BI_Tiempo.anio = bi_t.anio)
-        ) AS porcentaje
+        ) * 100 AS porcentaje
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
