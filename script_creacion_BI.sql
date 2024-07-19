@@ -733,7 +733,7 @@ AS
         bi_t.anio,
         bi_t.mes,
         bi_tur.nombre as turno,
-        COUNT(*) as cantidad_ventas
+        COUNT(distinct bi_hv.numero_ticket) as cantidad_ventas
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
