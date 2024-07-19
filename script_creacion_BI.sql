@@ -635,6 +635,7 @@ FROM (
     JOIN EL_DROPEO.BI_Medio_De_Pago mp ON mp.id = bi_p.medio_de_pago_id
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_p.tiempo_id
     JOIN EL_DROPEO.BI_Cuotas bi_c ON bi_c.id = bi_p.cuotas_id
+	WHERE bi_c.cantidad > 0
     GROUP BY s.nombre, mp.nombre, bi_t.anio, bi_t.mes
 ) as subquery
 WHERE subquery.rn <= 3
