@@ -29,6 +29,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obt
     DROP FUNCTION EL_DROPEO.Obtener_Rango_Etario
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Rango_Etario_String') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Rango_Etario_String
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Obtener_Tiempo') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
     DROP FUNCTION EL_DROPEO.Obtener_Tiempo
 GO
@@ -285,6 +289,18 @@ BEGIN
     WHERE fin >= @anios AND inicio <= @anios;
 
     RETURN @rango_etario_id;
+END
+
+GO
+CREATE FUNCTION EL_DROPEO.Rango_Etario_String (@inicio INT, @fin INT)
+RETURNS NVARCHAR(255)
+AS
+BEGIN
+    DECLARE @rango_etario NVARCHAR(255);
+
+    SET @rango_etario = CAST(@inicio AS NVARCHAR(255)) + ' - ' + CAST(@fin AS NVARCHAR(255));
+
+    RETURN @rango_etario;
 END
 
 GO
@@ -644,8 +660,7 @@ WHERE subquery.rn <= 3
 GO
 CREATE VIEW EL_DROPEO.Vista_Promedio_Importe_Cuota AS
 SELECT
-    re.inicio,
-    re.fin,
+    EL_DROPEO.Rango_Etario_String(re.inicio, re.fin) as rango_etario,
     c.cantidad,
     AVG(pagos.importe) as promedio_importe_cuota
 FROM EL_DROPEO.BI_Hechos_Pagos pagos
@@ -707,7 +722,7 @@ GO
 CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas -- ESTA OK, si sumas los porcentajes te casi el total, debe ser un error de redondeo
 AS
     SELECT
-        bi_hv.empleado_rango_etario,
+        EL_DROPEO.Rango_Etario_String(bi_r.inicio, bi_r.fin) as rango_etario,
         bi_tc.nombre as tipo_caja,
         bi_t.anio,
         bi_t.cuatrimestre,
@@ -721,7 +736,8 @@ AS
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
-    GROUP BY bi_hv.empleado_rango_etario, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre
+    JOIN EL_DROPEO.BI_Rango_Etario bi_r ON bi_r.id = bi_hv.empleado_rango_etario
+    GROUP BY bi_r.inicio, bi_r.fin, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre
 
 -- Cantidad de ventas registradas por turno para cada localidad según el mes de
 -- cada año
@@ -785,8 +801,7 @@ GO
 CREATE VIEW EL_DROPEO.Cantidad_Envios_Por_Rango_Etario_Clientes
 AS
     SELECT
-        bi_r.inicio as rango_etario_inicio,
-        bi_r.fin as rango_etario_fin,
+        EL_DROPEO.Rango_Etario_String(bi_r.inicio, bi_r.fin) as rango_etario,
         bi_t.anio,
         bi_t.cuatrimestre,
         COUNT(*) as cantidad_envios
