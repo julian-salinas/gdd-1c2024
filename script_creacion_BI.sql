@@ -378,11 +378,6 @@ INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (50, 200);
 
--- Popular tabla de localidades
-INSERT INTO EL_DROPEO.BI_Localidad (nombre)
-SELECT DISTINCT nombre as nombre_localidad
-FROM EL_DROPEO.Localidades;
-
 -- Popular Medios de Pago
 
 INSERT INTO EL_DROPEO.BI_Medio_De_Pago (nombre)
@@ -398,12 +393,6 @@ FROM EL_DROPEO.Sucursales;
 INSERT INTO EL_DROPEO.BI_Cuotas (cantidad)
 SELECT DISTINCT cuotas
 FROM EL_DROPEO.Detalles;
-
--- Popular tabla de rango etario
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
-INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (50, 200);
 
 -- Popular tabla de localidades
 INSERT INTO EL_DROPEO.BI_Localidad (nombre)
