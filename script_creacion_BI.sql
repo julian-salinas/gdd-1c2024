@@ -7,6 +7,14 @@ GO
 
 -- DROP VIEWS
 
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Promedio_Importe_Cuota') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Promedio_Importe_Cuota;
+GO
+
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Porcentaje_Descuento_Medio_Pago') and type in (N'V'))
+DROP VIEW EL_DROPEO.Vista_Porcentaje_Descuento_Medio_Pago;
+GO
+
 IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'EL_DROPEO.Vista_Importe_Pagos_Cuotas') and type in (N'V'))
 DROP VIEW EL_DROPEO.Vista_Importe_Pagos_Cuotas;
 GO
@@ -512,3 +520,19 @@ FROM EL_DROPEO.BI_Hechos_Pagos pagos
 JOIN EL_DROPEO.BI_Cuotas c ON c.id = pagos.cuotas_id
 JOIN EL_DROPEO.BI_Rango_Etario re ON re.id = pagos.cliente_re_id
 GROUP BY re.inicio, re.fin, c.cantidad
+
+-- Porcentaje de descuento aplicado por cada medio de pago en función del valor
+-- de total de pagos sin el descuento, por cuatrimestre. Es decir, total de descuentos
+-- sobre el total de pagos más el total de descuentos.
+
+GO
+
+CREATE VIEW EL_DROPEO.Vista_Porcentaje_Descuento_Medio_Pago AS
+SELECT
+    bi_t.cuatrimestre,
+    mp.nombre as medio_de_pago,
+    (SUM(pagos.descuento_aplicado) / (SUM(pagos.importe) + SUM(pagos.descuento_aplicado))) * 100 as porcentaje_descuento
+FROM EL_DROPEO.BI_Hechos_Pagos pagos
+JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = pagos.tiempo_id
+JOIN EL_DROPEO.BI_Medio_De_Pago mp ON mp.id = pagos.medio_de_pago_id
+GROUP BY bi_t.cuatrimestre, mp.nombre
