@@ -699,8 +699,10 @@ AS
     GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre
 
 
--- Registradas por rango etario del empleado según el tipo de caja para cada cuatrimestre. 
--- Se calcula tomando la cantidad de ventas correspondientes sobre el total de ventas anual
+-- Porcentaje anual de ventas registradas por rango etario del empleado según el
+-- tipo de caja para cada cuatrimestre. Se calcula tomando la cantidad de ventas
+-- correspondientes sobre el total de ventas anual.
+
 GO
 CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas -- ESTA OK, si sumas los porcentajes te casi el total, debe ser un error de redondeo
 AS
@@ -721,7 +723,8 @@ AS
     JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON bi_tc.id = bi_hv.tipo_caja_id
     GROUP BY bi_hv.empleado_rango_etario, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre
 
--- Para cada localidad según el mes de cada año. 
+-- Cantidad de ventas registradas por turno para cada localidad según el mes de
+-- cada año
 GO
 CREATE VIEW EL_DROPEO.Ventas_Por_Turno
 AS
