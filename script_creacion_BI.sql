@@ -50,6 +50,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Bus
     DROP FUNCTION EL_DROPEO.Buscar_Cuotas
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Calcular_Desvio_Envio') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Calcular_Desvio_Envio
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
 GO
@@ -236,6 +240,7 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Envios
     cumplio_envio BIT NOT NULL,
     costo_envio DECIMAL(18,2) NOT NULL,
     cantidad INT NOT NULL,
+    desvio INT NOT NULL,
     CONSTRAINT pk_BI_Hechos_Envios PRIMARY KEY (tiempo_id, localidad_id, cliente_re_id, sucursal_id, cumplio_envio)
 )
 
@@ -364,8 +369,9 @@ BEGIN
 
     SET @hora_entrega = DATEPART(HOUR, @fecha_entrega);
 
-    IF (CAST(@fecha_entrega AS DATE) <= CAST(@fecha_programada AS DATE) AND 
-        @hora_entrega BETWEEN @hora_inicio AND @hora_fin)
+    IF (CAST(@fecha_entrega AS DATE) < CAST(@fecha_programada AS DATE)
+        OR (CAST(@fecha_entrega AS DATE) = CAST(@fecha_programada AS DATE) AND 
+            @hora_entrega BETWEEN @hora_inicio AND @hora_fin))
     BEGIN
         SET @cumplio = 1;
     END
@@ -376,6 +382,37 @@ BEGIN
 
     RETURN @cumplio;
 END
+
+GO
+CREATE FUNCTION EL_DROPEO.Calcular_Desvio_Envio
+(
+    @fecha_programada DATETIME,
+    @fecha_entrega DATETIME,
+    @hora_inicio INT,
+    @hora_fin INT
+)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @resultado INT;
+    DECLARE @inicio_rango DATETIME;
+    DECLARE @fin_rango DATETIME;
+
+    SET @inicio_rango = DATEADD(HOUR, @hora_inicio, @fecha_programada);
+    SET @fin_rango = DATEADD(HOUR, @hora_fin, @fecha_programada);
+
+    IF @fecha_entrega BETWEEN @inicio_rango AND @fin_rango
+    BEGIN
+        RETURN 0;
+    END
+    IF @fecha_entrega < @inicio_rango
+    BEGIN
+        SET @resultado = ABS(DATEDIFF(HOUR, @fecha_entrega, @inicio_rango));
+        RETURN @resultado;
+    END
+    SET @resultado = ABS(DATEDIFF(HOUR, @fecha_entrega, @fin_rango));
+    RETURN @resultado;
+END;
 
 GO
 CREATE FUNCTION EL_DROPEO.Buscar_Turno (@fecha DATETIME)
@@ -554,7 +591,7 @@ SELECT descripcion FROM EL_DROPEO.Tipos_Caja;
 -------------------------
 /* Migracion de hechos */
 -------------------------
-INSERT INTO EL_DROPEO.BI_Hechos_Envios (tiempo_id, localidad_id, cliente_re_id, sucursal_id, cumplio_envio, costo_envio, cantidad)
+INSERT INTO EL_DROPEO.BI_Hechos_Envios (tiempo_id, localidad_id, cliente_re_id, sucursal_id, cumplio_envio, costo_envio, cantidad, desvio)
 SELECT
     EL_DROPEO.Obtener_Tiempo(e.fecha_entrega) as tiempo_id,
     bi_l.id as localidad_id,
@@ -562,7 +599,8 @@ SELECT
     bi_s.id as sucursal_id,
     EL_DROPEO.Cumplio_Entrega_Estimada(e.fecha_programada, e.fecha_entrega, e.hora_inicio, e.hora_fin) as cumplio_envio,
     SUM(e.costo),
-    COUNT(*) as cantidad
+    COUNT(*) as cantidad,
+    SUM(EL_DROPEO.Calcular_Desvio_Envio(e.fecha_programada, e.fecha_entrega, e.hora_inicio, e.hora_fin)) as desvio
 FROM EL_DROPEO.Envios e
 INNER JOIN EL_DROPEO.Ventas v ON e.venta_id = v.id
 INNER JOIN EL_DROPEO.Sucursales s ON v.caja_sucursal_id = s.id
@@ -813,7 +851,7 @@ AS
         bi_t.mes,
         CONVERT(DECIMAL(10,2), (SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN bi_he.cantidad ELSE 0 END)) / CONVERT(DECIMAL(10,2), sum(cantidad)) * 100) as porcentaje_cumplimiento,
 		SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN bi_he.cantidad ELSE 0 END) cant_cumplieron,
-		sum(cantidad) total
+		CONVERT(DECIMAL(10,2), SUM(DESVIO)) / CONVERT(DECIMAL(10,2), count(*)) desvio
     FROM EL_DROPEO.BI_Hechos_Envios bi_he
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_he.tiempo_id
     JOIN EL_DROPEO.BI_Sucursal bi_s ON bi_s.id = bi_he.sucursal_id
