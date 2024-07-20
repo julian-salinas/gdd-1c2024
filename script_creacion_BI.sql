@@ -271,9 +271,9 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Ventas
     tipo_caja_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tipo_Caja(id),
     precio_unitario DECIMAL(18,2) NOT NULL,
     unidades INT NOT NULL,
-    numero_ticket INT NOT NULL,
+    numero_ticket INT NOT NULL UNIQUE,
     CONSTRAINT pk_BI_Hechos_Ventas PRIMARY KEY (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario,
-        sucursal_id, turno_id, tipo_caja_id, numero_ticket) 
+        sucursal_id, turno_id, tipo_caja_id) 
 )
 
 ---------------
