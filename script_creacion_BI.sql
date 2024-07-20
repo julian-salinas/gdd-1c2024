@@ -50,6 +50,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Bus
     DROP FUNCTION EL_DROPEO.Buscar_Cuotas
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Calcular_Desvio_Envio') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+    DROP FUNCTION EL_DROPEO.Calcular_Desvio_Envio
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Crear_Tiempo_Si_No_Existe') AND type in (N'P', N'PC'))
     DROP PROCEDURE EL_DROPEO.Crear_Tiempo_Si_No_Existe
 GO
@@ -235,13 +239,17 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Envios
     sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Sucursal(id),
     cumplio_envio BIT NOT NULL,
     costo_envio DECIMAL(18,2) NOT NULL,
+    cantidad INT NOT NULL,
+    desvio INT NOT NULL,
+    CONSTRAINT pk_BI_Hechos_Envios PRIMARY KEY (tiempo_id, localidad_id, cliente_re_id, sucursal_id, cumplio_envio)
 )
 
 CREATE TABLE EL_DROPEO.BI_Hechos_Promociones
 (
     tiempo_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tiempo(id),
     categoria_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Categoria(id),
-    promocion_aplicada_descuento DECIMAL(18,2) NOT NULL
+    promocion_aplicada_descuento DECIMAL(18,2) NOT NULL,
+    CONSTRAINT pk_BI_Hechos_Promociones PRIMARY KEY (tiempo_id, categoria_id)
 )
 
 CREATE TABLE EL_DROPEO.BI_Hechos_Pagos
@@ -252,7 +260,9 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Pagos
     cuotas_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Cuotas(id),
     cliente_re_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Rango_Etario(id),
     descuento_aplicado DECIMAL(18,2) NOT NULL,
-    importe DECIMAL(18,2) NOT NULL
+    importe DECIMAL(18,2) NOT NULL,
+    cantidad INT NOT NULL,
+    CONSTRAINT pk_BI_Hechos_Pagos PRIMARY KEY (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id)
 )
 
 CREATE TABLE EL_DROPEO.BI_Hechos_Ventas
@@ -265,9 +275,11 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Ventas
     sucursal_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Sucursal(id),
     turno_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Turno(id),
     tipo_caja_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tipo_Caja(id),
-    precio_unitario DECIMAL(18,2) NOT NULL,
+    monto_total DECIMAL(18,2) NOT NULL,
     unidades INT NOT NULL,
-    numero_ticket INT NOT NULL
+    numero_ticket INT NOT NULL,
+    CONSTRAINT pk_BI_Hechos_Ventas PRIMARY KEY (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario,
+        sucursal_id, turno_id, tipo_caja_id, numero_ticket) 
 )
 
 ---------------
@@ -288,6 +300,13 @@ BEGIN
     FROM EL_DROPEO.BI_Rango_Etario
     WHERE fin >= @anios AND inicio <= @anios;
 
+    IF @rango_etario_id IS NULL 
+    BEGIN
+        SELECT @rango_etario_id = id
+        FROM EL_DROPEO.BI_Rango_Etario
+        WHERE inicio = 0 AND fin = 0;
+    END
+
     RETURN @rango_etario_id;
 END
 
@@ -298,7 +317,10 @@ AS
 BEGIN
     DECLARE @rango_etario NVARCHAR(255);
 
-    SET @rango_etario = CAST(@inicio AS NVARCHAR(255)) + ' - ' + CAST(@fin AS NVARCHAR(255));
+    IF @inicio = 0 AND @fin = 0
+        SET @rango_etario = 'Desconocido';
+    ELSE
+        SET @rango_etario = CAST(@inicio AS NVARCHAR(255)) + ' - ' + CAST(@fin AS NVARCHAR(255));
 
     RETURN @rango_etario;
 END
@@ -347,8 +369,9 @@ BEGIN
 
     SET @hora_entrega = DATEPART(HOUR, @fecha_entrega);
 
-    IF (CAST(@fecha_entrega AS DATE) <= CAST(@fecha_programada AS DATE) AND 
-        @hora_entrega BETWEEN @hora_inicio AND @hora_fin)
+    IF (CAST(@fecha_entrega AS DATE) < CAST(@fecha_programada AS DATE)
+        OR (CAST(@fecha_entrega AS DATE) = CAST(@fecha_programada AS DATE) AND 
+            @hora_entrega BETWEEN @hora_inicio AND @hora_fin))
     BEGIN
         SET @cumplio = 1;
     END
@@ -359,6 +382,37 @@ BEGIN
 
     RETURN @cumplio;
 END
+
+GO
+CREATE FUNCTION EL_DROPEO.Calcular_Desvio_Envio
+(
+    @fecha_programada DATETIME,
+    @fecha_entrega DATETIME,
+    @hora_inicio INT,
+    @hora_fin INT
+)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @resultado INT;
+    DECLARE @inicio_rango DATETIME;
+    DECLARE @fin_rango DATETIME;
+
+    SET @inicio_rango = DATEADD(HOUR, @hora_inicio, @fecha_programada);
+    SET @fin_rango = DATEADD(HOUR, @hora_fin, @fecha_programada);
+
+    IF @fecha_entrega BETWEEN @inicio_rango AND @fin_rango
+    BEGIN
+        RETURN 0;
+    END
+    IF @fecha_entrega < @inicio_rango
+    BEGIN
+        SET @resultado = ABS(DATEDIFF(HOUR, @fecha_entrega, @inicio_rango));
+        RETURN @resultado;
+    END
+    SET @resultado = ABS(DATEDIFF(HOUR, @fecha_entrega, @fin_rango));
+    RETURN @resultado;
+END;
 
 GO
 CREATE FUNCTION EL_DROPEO.Buscar_Turno (@fecha DATETIME)
@@ -484,6 +538,8 @@ INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 24);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (25, 34);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (35, 49);
 INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (50, 200);
+-- Usado para clientes null
+INSERT INTO EL_DROPEO.BI_Rango_Etario (inicio, fin) VALUES (0, 0);
 
 -- Popular Medios de Pago
 
@@ -535,14 +591,16 @@ SELECT descripcion FROM EL_DROPEO.Tipos_Caja;
 -------------------------
 /* Migracion de hechos */
 -------------------------
-INSERT INTO EL_DROPEO.BI_Hechos_Envios (tiempo_id, localidad_id, cliente_re_id, sucursal_id, cumplio_envio, costo_envio)
+INSERT INTO EL_DROPEO.BI_Hechos_Envios (tiempo_id, localidad_id, cliente_re_id, sucursal_id, cumplio_envio, costo_envio, cantidad, desvio)
 SELECT
     EL_DROPEO.Obtener_Tiempo(e.fecha_entrega) as tiempo_id,
     bi_l.id as localidad_id,
     EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
     bi_s.id as sucursal_id,
     EL_DROPEO.Cumplio_Entrega_Estimada(e.fecha_programada, e.fecha_entrega, e.hora_inicio, e.hora_fin) as cumplio_envio,
-    e.costo
+    SUM(e.costo),
+    COUNT(*) as cantidad,
+    SUM(EL_DROPEO.Calcular_Desvio_Envio(e.fecha_programada, e.fecha_entrega, e.hora_inicio, e.hora_fin)) as desvio
 FROM EL_DROPEO.Envios e
 INNER JOIN EL_DROPEO.Ventas v ON e.venta_id = v.id
 INNER JOIN EL_DROPEO.Sucursales s ON v.caja_sucursal_id = s.id
@@ -551,12 +609,13 @@ INNER JOIN EL_DROPEO.Ubicaciones u ON u.id = c.ubicacion_id
 INNER JOIN EL_DROPEO.Localidades l ON l.id = u.localidad_id
 INNER JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.nombre = l.nombre
 INNER JOIN EL_DROPEO.BI_Sucursal bi_s ON bi_s.nombre = s.nombre
+GROUP BY EL_DROPEO.Obtener_Tiempo(e.fecha_entrega), bi_l.id, EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento), bi_s.id, EL_DROPEO.Cumplio_Entrega_Estimada(e.fecha_programada, e.fecha_entrega, e.hora_inicio, e.hora_fin)
 
 INSERT INTO EL_DROPEO.BI_Hechos_Promociones (tiempo_id, categoria_id, promocion_aplicada_descuento)
 SELECT 
 	EL_DROPEO.Obtener_Tiempo(v.fecha_hora) as tiempo_id, 
 	BI_c.id as categoria_id,
-	pr.promocion_aplicada_descuento
+	SUM(pr.promocion_aplicada_descuento)
 FROM EL_DROPEO.Promociones_X_Items pr
 LEFT JOIN EL_DROPEO.Items i ON i.id = item_id
 LEFT JOIN EL_DROPEO.Ventas v ON v.id = i.venta_id
@@ -564,17 +623,18 @@ LEFT JOIN EL_DROPEO.Productos p ON p.id = i.producto_id
 LEFT JOIN EL_DROPEO.Sub_Categorias s ON s.id = p.sub_categoria_id
 LEFT JOIN EL_DROPEO.Categorias c ON c.id = s.categoria_id
 LEFT JOIN EL_DROPEO.BI_Categoria BI_c ON c.nombre = BI_c.nombre
-WHERE promocion_aplicada_descuento > 0
+GROUP BY EL_DROPEO.Obtener_Tiempo(v.fecha_hora), BI_c.id
 
-INSERT INTO EL_DROPEO.BI_Hechos_Pagos (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id, descuento_aplicado, importe)
+INSERT INTO EL_DROPEO.BI_Hechos_Pagos (sucursal_id, medio_de_pago_id, tiempo_id, cuotas_id, cliente_re_id, descuento_aplicado, importe, cantidad)
 SELECT
     s.id as sucursal_id,
     mp.id as medio_de_pago_id,
     EL_DROPEO.Obtener_Tiempo(p.fecha) as tiempo_id,
     EL_DROPEO.Buscar_Cuotas(p.id) as cuotas_id,
     EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento) as cliente_re_id,
-    dp.descuento_aplicado,
-    p.importe
+    SUM(dp.descuento_aplicado) AS descuento_aplicado,
+    SUM(p.importe) AS importe,
+    COUNT(*) as cantidad
 FROM EL_DROPEO.Pagos p
 JOIN EL_DROPEO.Medios_De_Pago m ON m.id = p.medio_de_pago_id
 JOIN EL_DROPEO.Ventas v on v.id = p.venta_id
@@ -583,8 +643,9 @@ JOIN EL_DROPEO.Sucursales s ON s.id = caja.sucursal_id
 JOIN EL_DROPEO.Clientes c ON c.dni = EL_DROPEO.Buscar_Cliente(v.numero_ticket, s.nombre)
 JOIN EL_DROPEO.Descuentos_Pagos dp ON dp.pago_id = p.id
 JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.descripcion
+GROUP BY s.id, mp.id, EL_DROPEO.Obtener_Tiempo(p.fecha), EL_DROPEO.Buscar_Cuotas(p.id), EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento)
 
-INSERT INTO EL_DROPEO.BI_Hechos_Ventas (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario, sucursal_id, turno_id, tipo_caja_id, precio_unitario, unidades, numero_ticket)
+INSERT INTO EL_DROPEO.BI_Hechos_Ventas (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario, sucursal_id, turno_id, tipo_caja_id, monto_total, unidades, numero_ticket)
 SELECT
   EL_DROPEO.Obtener_Tiempo(v.fecha_hora) as tiempo_id,
   bi_p.id as provincia_id,
@@ -594,8 +655,8 @@ SELECT
   bi_s.id as sucursal_id,
   EL_DROPEO.Buscar_Turno(v.fecha_hora) as turno_id,
   bi_tc.id as tipo_caja_id,
-  i.precio_unitario as precio_unitario,
-  i.cantidad as unidades,
+  sum(i.precio_unitario * i.cantidad) as monto_total,
+  sum(i.cantidad) as unidades,
   v.numero_ticket
 FROM EL_DROPEO.Ventas v
 LEFT JOIN EL_DROPEO.Sucursales s ON s.id = v.caja_sucursal_id
@@ -610,8 +671,8 @@ LEFT JOIN EL_DROPEO.Empleados e ON e.id = v.empleado_id
 LEFT JOIN EL_DROPEO.Items i ON i.venta_id = v.id
 LEFT JOIN EL_DROPEO.Cajas caja ON caja.numero = v.caja_numero and caja.sucursal_id = v.caja_sucursal_id
 LEFT JOIN EL_DROPEO.Tipos_Caja tc ON tc.id = caja.tipo_caja_id
-LEFT JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON tc.descripcion = bi_tc.nombre;
-
+LEFT JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON tc.descripcion = bi_tc.nombre
+GROUP BY EL_DROPEO.Obtener_Tiempo(v.fecha_hora), bi_p.id, bi_l.id, EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento), EL_DROPEO.Obtener_Rango_Etario(e.fecha_nacimiento), bi_s.id, EL_DROPEO.Buscar_Turno(v.fecha_hora), bi_tc.id, v.numero_ticket
 -------------------------
 /* Creacion de vistas */
 -------------------------
@@ -662,7 +723,7 @@ CREATE VIEW EL_DROPEO.Vista_Promedio_Importe_Cuota AS
 SELECT
     EL_DROPEO.Rango_Etario_String(re.inicio, re.fin) as rango_etario,
     c.cantidad,
-    AVG(pagos.importe) as promedio_importe_cuota
+    sum(pagos.importe) / sum(pagos.cantidad) as promedio_importe_cuota
 FROM EL_DROPEO.BI_Hechos_Pagos pagos
 JOIN EL_DROPEO.BI_Cuotas c ON c.id = pagos.cuotas_id
 JOIN EL_DROPEO.BI_Rango_Etario re ON re.id = pagos.cliente_re_id
@@ -691,7 +752,7 @@ AS
         bi_l.nombre as localidad,
         bi_t.anio,
         bi_t.mes,
-        SUM(bi_hv.precio_unitario * bi_hv.unidades) / SUM(bi_hv.unidades) as ticket_promedio
+        SUM(bi_hv.monto_total) / COUNT(*) as ticket_promedio
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
@@ -708,7 +769,7 @@ AS
         bi_hv.turno_id,
         bi_t.anio,
         bi_t.cuatrimestre,
-        SUM(bi_hv.unidades) / COUNT(distinct bi_hv.numero_ticket) as unidades_promedio
+        SUM(bi_hv.unidades) / COUNT(*) as unidades_promedio
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre
@@ -717,7 +778,6 @@ AS
 -- Porcentaje anual de ventas registradas por rango etario del empleado según el
 -- tipo de caja para cada cuatrimestre. Se calcula tomando la cantidad de ventas
 -- correspondientes sobre el total de ventas anual.
-
 GO
 CREATE VIEW EL_DROPEO.Porcentaje_Anual_Ventas -- ESTA OK, si sumas los porcentajes te casi el total, debe ser un error de redondeo
 AS
@@ -749,7 +809,7 @@ AS
         bi_t.anio,
         bi_t.mes,
         bi_tur.nombre as turno,
-        COUNT(distinct bi_hv.numero_ticket) as cantidad_ventas
+        COUNT(*) as cantidad_ventas
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
@@ -761,7 +821,7 @@ AS
 GO
 CREATE VIEW EL_DROPEO.Top_Categorias_Descuento_Aplicado
 AS
-	SELECT 
+	SELECT
 		categoria, 
 		anio, 
 		cuatrimestre, 
@@ -781,6 +841,7 @@ AS
     WHERE rn <= 3
 
 -- Porcentaje de cumplimiento de envíos en los tiempos programados por sucursal por año/mes (desvío)
+-- usar nuevo esuqema tabla hechos_envios: agrupados por los que cumplkieron
 GO
 CREATE VIEW EL_DROPEO.Porcentaje_Cumplimiento_Envios
 AS
@@ -788,9 +849,9 @@ AS
         bi_s.nombre as sucursal,
         bi_t.anio,
         bi_t.mes,
-        CONVERT(DECIMAL(10,2), (SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN 1 ELSE 0 END)) / CONVERT(DECIMAL(10,2), COUNT(*))) * 100 as porcentaje_cumplimiento,
-		SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN 1 ELSE 0 END) cant_cumplieron,
-		count(*) total
+        CONVERT(DECIMAL(10,2), (SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN bi_he.cantidad ELSE 0 END)) / CONVERT(DECIMAL(10,2), sum(cantidad)) * 100) as porcentaje_cumplimiento,
+		SUM(CASE WHEN bi_he.cumplio_envio = 1 THEN bi_he.cantidad ELSE 0 END) cant_cumplieron,
+		CONVERT(DECIMAL(10,2), SUM(DESVIO)) / CONVERT(DECIMAL(10,2), count(*)) desvio
     FROM EL_DROPEO.BI_Hechos_Envios bi_he
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_he.tiempo_id
     JOIN EL_DROPEO.BI_Sucursal bi_s ON bi_s.id = bi_he.sucursal_id
@@ -804,7 +865,7 @@ AS
         EL_DROPEO.Rango_Etario_String(bi_r.inicio, bi_r.fin) as rango_etario,
         bi_t.anio,
         bi_t.cuatrimestre,
-        COUNT(*) as cantidad_envios
+        sum(cantidad) as cantidad_envios
     FROM EL_DROPEO.BI_Hechos_Envios bi_he
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_he.tiempo_id
     JOIN EL_DROPEO.BI_Rango_Etario bi_r ON bi_r.id = bi_he.cliente_re_id
@@ -814,7 +875,7 @@ AS
 GO
 CREATE VIEW EL_DROPEO.Localidades_Con_Mayor_Costo_Envio
 AS
-    SELECT 
+    SELECT
         bi_l.nombre as localidad,
         SUM(bi_he.costo_envio) as costo_total
     FROM EL_DROPEO.BI_Hechos_Envios bi_he
@@ -835,7 +896,7 @@ AS
         SELECT
             t.anio AS anio,
             t.mes AS mes,
-            sum(precio_unitario * unidades) AS total_tickets
+            sum(monto_total) AS total_tickets
         FROM el_dropeo.bi_hechos_ventas bi_hv
         JOIN el_dropeo.bi_tiempo t ON bi_hv.tiempo_id = t.id
         GROUP BY t.anio, t.mes
@@ -858,3 +919,4 @@ AS
         JOIN el_dropeo.bi_tiempo tp ON bi_hp.tiempo_id = tp.id
         GROUP BY tp.anio, tp.mes
     ) AS pagos ON pagos.anio = ventas.anio AND pagos.mes = ventas.mes
+
