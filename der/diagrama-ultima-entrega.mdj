@@ -10028,13 +10028,28 @@
 											"top": 1618,
 											"width": 272.08447265625,
 											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "AAAAAAGQ9fNsijoLrYg=",
+											"_parent": {
+												"$ref": "AAAAAAGQvpovzX0P/LE="
+											},
+											"model": {
+												"$ref": "AAAAAAGQ9fNsbDoIoS0="
+											},
+											"font": "Arial;13;0",
+											"left": 1613,
+											"top": 1618,
+											"width": 272.08447265625,
+											"height": 13
 										}
 									],
 									"font": "Arial;13;0",
 									"left": 1608,
 									"top": 1463,
 									"width": 282.08447265625,
-									"height": 158
+									"height": 173
 								}
 							],
 							"font": "Arial;13;0",
@@ -13089,6 +13104,15 @@
 								"$ref": "AAAAAAGQvpovzX0LeHA="
 							},
 							"name": "Numero_Ticket",
+							"type": "INTEGER"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "AAAAAAGQ9fNsbDoIoS0=",
+							"_parent": {
+								"$ref": "AAAAAAGQvpovzX0LeHA="
+							},
+							"name": "cantidad_tickets",
 							"type": "INTEGER"
 						}
 					]

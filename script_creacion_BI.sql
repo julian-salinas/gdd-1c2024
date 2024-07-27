@@ -474,14 +474,12 @@ BEGIN
     SET @anio = YEAR(@fecha);
     SET @mes = MONTH(@fecha);
 
-    IF @mes BETWEEN 1 AND 3
+    IF @mes BETWEEN 1 AND 4
         SET @cuatrimestre = 1;
-    ELSE IF @mes BETWEEN 4 AND 6
+    ELSE IF @mes BETWEEN 5 AND 8
         SET @cuatrimestre = 2;
-    ELSE IF @mes BETWEEN 7 AND 9
-        SET @cuatrimestre = 3;
     ELSE
-        SET @cuatrimestre = 4;
+        SET @cuatrimestre = 3;
 
     DECLARE @tiempo_id INT;
     SELECT @tiempo_id = id
@@ -716,7 +714,7 @@ FROM (
 ) as subquery
 WHERE subquery.rn <= 3
 
--- Promedio de importe de la cuota en función del rango etareo del cliente.
+-- Promedio de importe de la cuota en función del rango etario del cliente.
 GO
 CREATE VIEW EL_DROPEO.Vista_Promedio_Importe_Cuota AS
 SELECT
