@@ -63,7 +63,7 @@ WHERE subquery.rn <= 3
 CREATE TABLE EL_DROPEO.Materialized_Vista_Promedio_Importe_Cuota(
     rango_etario varchar(255) not null,
     cantidad int not null,
-    promedio_importe_cuota decimal(10, 2) not null
+    promedio_importe_cuota decimal(12, 6) not null
 )
 
 INSERT INTO EL_DROPEO.Materialized_Vista_Promedio_Importe_Cuota
