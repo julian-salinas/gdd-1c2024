@@ -6,12 +6,12 @@
    Porcentaje de descuento aplicados en función del total de los tickets según el
    mes de cada año.
 ---------------------------------------------------------------------------------- */
-CREATE TABLE EL_DROPEO.Materialized_Vista_Porcentaje_Descuento_Aplicado(
+CREATE TABLE EL_DROPEO.Materialized_Vista_Porcentaje_Descuento(
     mes int not null,
     porcentaje_descuento decimal(10, 6) not null
 )
 
-INSERT INTO EL_DROPEO.Materialized_Vista_Porcentaje_Descuento_Aplicado
+INSERT INTO EL_DROPEO.Materialized_Vista_Porcentaje_Descuento
 SELECT
     tiempo.mes,
     (SUM(pagos.descuento_aplicado) / SUM(pagos.importe + pagos.descuento_aplicado)) * 100 as porcentaje_descuento
@@ -101,14 +101,14 @@ GROUP BY bi_t.cuatrimestre, mp.nombre
    Valor promedio de las ventas (en $) según la localidad, año y mes. 
    Se calcula en función de la sumatoria del importe de las ventas sobre el total de las mismas
 ---------------------------------------------------------------------------------- */
-CREATE TABLE EL_DROPEO.Materialized_Vista_Valor_Promedio_Ventas(
+CREATE TABLE EL_DROPEO.Materialized_Ticket_Promedio_Mensual(
     localidad varchar(255) not null,
     anio int not null,
     mes int not null,
     ticket_promedio decimal(12, 6) not null
 )
 
-INSERT INTO EL_DROPEO.Materialized_Vista_Valor_Promedio_Ventas
+INSERT INTO EL_DROPEO.Materialized_Ticket_Promedio_Mensual
 SELECT
     bi_l.nombre as localidad,
     bi_t.anio,
@@ -124,14 +124,14 @@ GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes
    Se obtiene sumando la cantidad de artículos de todos los tickets correspondientes sobre la cantidad de tickets. 
    Si un producto tiene más de una unidad en un ticket, para el indicador se consideran todas las unidades.
 ---------------------------------------------------------------------------------- */
-CREATE TABLE EL_DROPEO.Materialized_Vista_Cantidad_Unidades_Promedio(
+CREATE TABLE EL_DROPEO.Materialized_Cantidad_Unidades_Promedio(
     turno_id int not null,
     anio int not null,
     cuatrimestre int not null,
     unidades_promedio decimal(10, 6) not null
 )
 
-INSERT INTO EL_DROPEO.Materialized_Vista_Cantidad_Unidades_Promedio
+INSERT INTO EL_DROPEO.Materialized_Cantidad_Unidades_Promedio
 SELECT
     bi_hv.turno_id,
     bi_t.anio,
@@ -146,7 +146,7 @@ GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre
    tipo de caja para cada cuatrimestre. Se calcula tomando la cantidad de ventas
    correspondientes sobre el total de ventas anual.
 ---------------------------------------------------------------------------------- */
-CREATE TABLE EL_DROPEO.Materialized_Vista_Porcentaje_Anual_Ventas(
+CREATE TABLE EL_DROPEO.Materialized_Porcentaje_Anual_Ventas(
     rango_etario varchar(255) not null,
     tipo_caja varchar(255) not null,
     anio int not null,
@@ -154,7 +154,7 @@ CREATE TABLE EL_DROPEO.Materialized_Vista_Porcentaje_Anual_Ventas(
     porcentaje decimal(14, 13) not null
 )
 
-INSERT INTO EL_DROPEO.Materialized_Vista_Porcentaje_Anual_Ventas
+INSERT INTO EL_DROPEO.Materialized_Porcentaje_Anual_Ventas
 SELECT
     EL_DROPEO.Rango_Etario_String(bi_r.inicio, bi_r.fin) as rango_etario,
     bi_tc.nombre as tipo_caja,
@@ -177,7 +177,7 @@ GROUP BY bi_r.inicio, bi_r.fin, bi_tc.nombre, bi_t.anio, bi_t.cuatrimestre
    Cantidad de ventas registradas por turno para cada localidad según el mes de
    cada año.
 ---------------------------------------------------------------------------------- */
-CREATE TABLE EL_DROPEO.Materialized_Vista_Ventas_Por_Turno(
+CREATE TABLE EL_DROPEO.Materialized_Ventas_Por_Turno(
     localidad varchar(255) not null,
     anio int not null,
     mes int not null,
@@ -185,7 +185,7 @@ CREATE TABLE EL_DROPEO.Materialized_Vista_Ventas_Por_Turno(
     cantidad_ventas int not null
 )
 
-INSERT INTO EL_DROPEO.Materialized_Vista_Ventas_Por_Turno
+INSERT INTO EL_DROPEO.Materialized_Ventas_Por_Turno
 SELECT
     bi_l.nombre as localidad,
     bi_t.anio,
@@ -202,14 +202,14 @@ GROUP BY bi_l.nombre, bi_t.anio, bi_t.mes, bi_tur.nombre
    Cantidad de ventas registradas por rango etario del empleado según el tipo de
    caja para cada cuatrimestre de cada año.
 ---------------------------------------------------------------------------------- */
-CREATE TABLE EL_DROPEO.Materialized_Vista_Ventas_Por_Rango_Etario(
+CREATE TABLE EL_DROPEO.Materialized_Top_Categorias_Descuento_Aplicado(
     categoria varchar(255) not null,
     anio int not null,
     cuatrimestre int not null,
     descuento_total decimal(11,2) not null
 )
 
-INSERT INTO EL_DROPEO.Materialized_Vista_Ventas_Por_Rango_Etario
+INSERT INTO EL_DROPEO.Materialized_Top_Categorias_Descuento_Aplicado
 SELECT
     categoria, 
     anio, 
