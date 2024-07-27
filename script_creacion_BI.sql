@@ -62,7 +62,6 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Mig
     DROP PROCEDURE EL_DROPEO.Migrar_Fechas
 GO
 
--- DROP HECHOS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'EL_DROPEO.Ticket_Promedio_Mensual') AND type in (N'V'))
     DROP VIEW EL_DROPEO.Ticket_Promedio_Mensual
 GO
