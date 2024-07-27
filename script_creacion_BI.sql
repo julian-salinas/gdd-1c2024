@@ -336,14 +336,12 @@ BEGIN
     SET @anio = YEAR(@fecha);
     SET @mes = MONTH(@fecha);
 
-    IF @mes BETWEEN 1 AND 3
+    IF @mes BETWEEN 1 AND 4
         SET @cuatrimestre = 1;
-    ELSE IF @mes BETWEEN 4 AND 6
+    ELSE IF @mes BETWEEN 5 AND 8
         SET @cuatrimestre = 2;
-    ELSE IF @mes BETWEEN 7 AND 9
-        SET @cuatrimestre = 3;
     ELSE
-        SET @cuatrimestre = 4;
+        SET @cuatrimestre = 3;
 
     DECLARE @tiempo_id INT;
     SELECT @tiempo_id = id
@@ -763,13 +761,14 @@ GO
 CREATE VIEW EL_DROPEO.Cantidad_Unidades_Promedio
 AS
     SELECT
-        bi_hv.turno_id,
+        bi_tur.nombre as turno,
         bi_t.anio,
         bi_t.cuatrimestre,
         SUM(bi_hv.unidades) / SUM(bi_hv.cantidad_tickets) as unidades_promedio
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
-    GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre
+    JOIN EL_DROPEO.BI_Turno bi_tur ON bi_tur.id = bi_hv.turno_id
+    GROUP BY bi_tur.nombre, bi_t.anio, bi_t.cuatrimestre
 
 
 -- Porcentaje anual de ventas registradas por rango etario del empleado según el
