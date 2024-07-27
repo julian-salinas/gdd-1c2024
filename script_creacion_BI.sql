@@ -276,9 +276,9 @@ CREATE TABLE EL_DROPEO.BI_Hechos_Ventas
     tipo_caja_id INT NOT NULL FOREIGN KEY REFERENCES EL_DROPEO.BI_Tipo_Caja(id),
     monto_total DECIMAL(18,2) NOT NULL,
     unidades INT NOT NULL,
-    numero_ticket INT NOT NULL,
+    cantidad_tickets INT NOT NULL,
     CONSTRAINT pk_BI_Hechos_Ventas PRIMARY KEY (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario,
-        sucursal_id, turno_id, tipo_caja_id, numero_ticket) 
+        sucursal_id, turno_id, tipo_caja_id) 
 )
 
 ---------------
@@ -644,7 +644,7 @@ JOIN EL_DROPEO.Descuentos_Pagos dp ON dp.pago_id = p.id
 JOIN EL_DROPEO.BI_Medio_De_Pago mp on mp.nombre = m.descripcion
 GROUP BY s.id, mp.id, EL_DROPEO.Obtener_Tiempo(p.fecha), EL_DROPEO.Buscar_Cuotas(p.id), EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento)
 
-INSERT INTO EL_DROPEO.BI_Hechos_Ventas (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario, sucursal_id, turno_id, tipo_caja_id, monto_total, unidades, numero_ticket)
+INSERT INTO EL_DROPEO.BI_Hechos_Ventas (tiempo_id, provincia_id, localidad_id, cliente_rango_etario, empleado_rango_etario, sucursal_id, turno_id, tipo_caja_id, monto_total, unidades, cantidad_tickets)
 SELECT
   EL_DROPEO.Obtener_Tiempo(v.fecha_hora) as tiempo_id,
   bi_p.id as provincia_id,
@@ -656,7 +656,7 @@ SELECT
   bi_tc.id as tipo_caja_id,
   sum(i.precio_unitario * i.cantidad) as monto_total,
   sum(i.cantidad) as unidades,
-  v.numero_ticket
+  count(distinct numero_ticket) as cantidad_tickets
 FROM EL_DROPEO.Ventas v
 LEFT JOIN EL_DROPEO.Sucursales s ON s.id = v.caja_sucursal_id
 LEFT JOIN EL_DROPEO.Ubicaciones u ON u.id = s.ubicacion_id
@@ -671,7 +671,7 @@ LEFT JOIN EL_DROPEO.Items i ON i.venta_id = v.id
 LEFT JOIN EL_DROPEO.Cajas caja ON caja.numero = v.caja_numero and caja.sucursal_id = v.caja_sucursal_id
 LEFT JOIN EL_DROPEO.Tipos_Caja tc ON tc.id = caja.tipo_caja_id
 LEFT JOIN EL_DROPEO.BI_Tipo_Caja bi_tc ON tc.descripcion = bi_tc.nombre
-GROUP BY EL_DROPEO.Obtener_Tiempo(v.fecha_hora), bi_p.id, bi_l.id, EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento), EL_DROPEO.Obtener_Rango_Etario(e.fecha_nacimiento), bi_s.id, EL_DROPEO.Buscar_Turno(v.fecha_hora), bi_tc.id, v.numero_ticket
+GROUP BY EL_DROPEO.Obtener_Tiempo(v.fecha_hora), bi_p.id, bi_l.id, EL_DROPEO.Obtener_Rango_Etario(c.fecha_nacimiento), EL_DROPEO.Obtener_Rango_Etario(e.fecha_nacimiento), bi_s.id, EL_DROPEO.Buscar_Turno(v.fecha_hora), bi_tc.id
 -------------------------
 /* Creacion de vistas */
 -------------------------
@@ -751,7 +751,7 @@ AS
         bi_l.nombre as localidad,
         bi_t.anio,
         bi_t.mes,
-        SUM(bi_hv.monto_total) / COUNT(*) as ticket_promedio
+        SUM(bi_hv.monto_total) / SUM(bi_hv.cantidad_tickets) as ticket_promedio
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
@@ -768,7 +768,7 @@ AS
         bi_hv.turno_id,
         bi_t.anio,
         bi_t.cuatrimestre,
-        SUM(bi_hv.unidades) / COUNT(*) as unidades_promedio
+        SUM(bi_hv.unidades) / SUM(bi_hv.cantidad_tickets) as unidades_promedio
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     GROUP BY bi_hv.turno_id, bi_t.anio, bi_t.cuatrimestre
@@ -785,11 +785,11 @@ AS
         bi_tc.nombre as tipo_caja,
         bi_t.anio,
         bi_t.cuatrimestre,
-        CONVERT(DECIMAL(10, 2), COUNT(*)) / CONVERT(
+        CONVERT(DECIMAL(10, 2), SUM(bi_hv.cantidad_tickets)) / CONVERT(
             DECIMAL(10, 2),
-            (SELECT COUNT(*)
+            (SELECT SUM(cantidad_tickets)
             FROM EL_DROPEO.BI_Hechos_Ventas 
-            JOIN EL_DROPEO.BI_Tiempo ON BI_Tiempo.id = BI_Hechos_Ventas.tiempo_id 
+            JOIN EL_DROPEO.BI_Tiempo ON BI_Tiempo.id = BI_Hechos_Ventas.tiempo_id
             WHERE BI_Tiempo.anio = bi_t.anio)
         ) * 100 AS porcentaje
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
@@ -808,7 +808,7 @@ AS
         bi_t.anio,
         bi_t.mes,
         bi_tur.nombre as turno,
-        COUNT(*) as cantidad_ventas
+        SUM(bi_hv.cantidad_tickets) as cantidad_ventas
     FROM EL_DROPEO.BI_Hechos_Ventas bi_hv
     JOIN EL_DROPEO.BI_Tiempo bi_t ON bi_t.id = bi_hv.tiempo_id
     JOIN EL_DROPEO.BI_Localidad bi_l ON bi_l.id = bi_hv.localidad_id
